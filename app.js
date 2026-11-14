@@ -762,6 +762,8 @@
   const challengeTitle = (entry) => (Array.isArray(entry) && entry[3]) || "";
   // Old wording -> new wording, so a tick survives a challenge being reworded.
   const RENAMED = {
+    "Spend one whole chase running backwards, looking at the killer.": "Spend one whole chase looking at the killer.",
+    "Finish the trial with at least three totems still standing.": "Finish the trial with at least three hex totems still standing.",
     "Cleanse or bless every totem you find.": "Cleanse or bless every totem in one trial.",
     "Play the four perks on the reels exactly as spun, with no swaps.": "Play the four perks on the reels exactly as spun, with no item or offering.",
     "Play the four perks on the reels exactly as spun, with no add-ons.": "Play the four perks on the reels exactly as spun, with no add-ons or offering.",

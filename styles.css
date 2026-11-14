@@ -424,7 +424,11 @@ dialog.tally .sheet-actions { justify-content: center; }
 .ch-row.done .gem { --gem-colour: var(--done); }
 .ch-row.done .cbadge { background: var(--done); }
 .ch-row.done .ch-tick { background: var(--done); border-color: var(--done); color: #0c0a0b; }
-.ask form { display: flex; gap: 8px; }
+.ask form { display: flex; flex-direction: column; gap: 8px; }
+/* quick build ideas take the width; a compact Suggest button sits beside them */
+.ask-row { display: flex; gap: 8px; align-items: stretch; }
+.ask-row select { flex: 1 1 auto; }
+#askBtn { flex: 0 0 auto; padding: 8px 14px; font-size: 0.8rem; }
 input[type="text"], input[type="search"], textarea, select {
   width: 100%;
   min-width: 0;

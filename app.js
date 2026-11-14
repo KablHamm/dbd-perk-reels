@@ -769,6 +769,30 @@
     });
   });
 
+  /* ------------------------------------------------------------------
+     Installing as an app
+     The online copy registers a service worker (sw.js) so browsers offer to install it and
+     it keeps working offline. Where the browser supports it, an "Install app" button appears
+     in the footer; elsewhere (iPhone, iPad) use the browser's Share > Add to Home Screen.
+     ------------------------------------------------------------------ */
+  if ("serviceWorker" in navigator && location.protocol === "https:") {
+    navigator.serviceWorker.register("sw.js").catch(() => { /* app still works without it */ });
+  }
+  let installPrompt = null;
+  window.addEventListener("beforeinstallprompt", (event) => {
+    event.preventDefault();
+    installPrompt = event;
+    $("#installBtn").hidden = false;
+  });
+  $("#installBtn").addEventListener("click", async () => {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    await installPrompt.userChoice;
+    installPrompt = null;
+    $("#installBtn").hidden = true;
+  });
+  window.addEventListener("appinstalled", () => { $("#installBtn").hidden = true; });
+
   let savedSide = "survivor";
   try { savedSide = localStorage.getItem(SIDE_KEY) === "killer" ? "killer" : "survivor"; } catch { /* storage unavailable */ }
   setSide(savedSide);

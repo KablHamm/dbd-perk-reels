@@ -4,7 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Perk Randomiser</title>
-  <link rel="stylesheet" href="styles.css?v=9">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0c0a0b">
+  <link rel="icon" href="app-icons/icon-192.png">
+  <link rel="apple-touch-icon" href="app-icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="stylesheet" href="styles.css?v=10">
 </head>
 <body>
   <header class="top">
@@ -44,6 +50,7 @@
   </main>
 
   <footer>
+    <button type="button" class="btn" id="installBtn" hidden>Install app</button>
     <p>Fan-made and not affiliated with Behaviour Interactive. Perk descriptions and icons come from the <a href="https://deadbydaylight.wiki.gg/wiki/Perks" target="_blank" rel="noopener">Dead by Daylight Wiki</a>.</p>
   </footer>
 
@@ -109,6 +116,6 @@
   <script src="data/survivor-perks.js"></script>
   <script src="data/killer-perks.js"></script>
   <script src="data/descriptions.js"></script>
-  <script src="app.js?v=9"></script>
+  <script src="app.js?v=10"></script>
 </body>
 </html>

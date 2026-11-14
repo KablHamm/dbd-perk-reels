@@ -285,6 +285,7 @@ dialog.large[open] {
 .owner { color: var(--muted); font-size: 0.9rem; }
 .desc { margin-bottom: 14px; white-space: pre-line; font-size: 0.95rem; }
 footer a { color: inherit; }
+#installBtn { margin-bottom: 14px; color: var(--text); }
 dialog.small { width: min(520px, calc(100vw - 24px)); }
 
 .browse-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }

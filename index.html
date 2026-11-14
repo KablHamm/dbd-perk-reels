@@ -11,7 +11,7 @@
   <link rel="apple-touch-icon" href="app-icons/icon-192.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
-  <link rel="stylesheet" href="styles.css?v=13">
+  <link rel="stylesheet" href="styles.css?v=14">
 </head>
 <body>
   <header class="top">
@@ -50,9 +50,10 @@
 
     <section class="challenge" aria-labelledby="challengeTitle">
       <h2 id="challengeTitle">Random challenge</h2>
-      <div class="challenge-reel" id="challengeReel" aria-live="polite"><div class="strip"></div></div>
+      <div class="challenge-reel" id="challengeReel" role="button" tabindex="0" aria-pressed="false" aria-live="polite"><div class="strip"></div></div>
+      <p class="hint" id="challengeCount" role="status"></p>
       <div class="challenge-foot">
-        <span class="hint" id="challengeCount"></span>
+        <button type="button" class="btn" id="challengesBtn">All challenges</button>
         <button type="button" class="btn primary" id="challengeBtn">Spin challenge</button>
       </div>
     </section>
@@ -110,6 +111,21 @@
     </div>
   </dialog>
 
+  <!-- All challenges -->
+  <dialog id="challengesDialog" class="sheet small" aria-labelledby="challengesTitle">
+    <div class="browse-head">
+      <h3 id="challengesTitle">Survivor challenges</h3>
+      <span class="count" id="challengesCount" role="status"></span>
+      <button type="button" class="btn icon" data-close aria-label="Close">✕</button>
+    </div>
+    <p class="hint owners-hint">Click a challenge to tick it off, and again to untick it. Saved on this device.</p>
+    <div class="ch-list" id="challengesList"></div>
+    <div class="sheet-actions">
+      <button type="button" class="btn" id="challengesReset">Untick all</button>
+      <button type="button" class="btn" data-close>Done</button>
+    </div>
+  </dialog>
+
   <!-- Check for new perks -->
   <dialog id="updateDialog" class="sheet small" aria-labelledby="updateTitle">
     <h3 id="updateTitle">Check for new perks</h3>
@@ -125,8 +141,8 @@
   <script src="data/survivor-perks.js"></script>
   <script src="data/killer-perks.js"></script>
   <script src="data/descriptions.js"></script>
-  <script src="data/challenges.js?v=13"></script>
-  <script src="data/challenge-icons.js?v=13"></script>
-  <script src="app.js?v=13"></script>
+  <script src="data/challenges.js?v=14"></script>
+  <script src="data/challenge-icons.js?v=14"></script>
+  <script src="app.js?v=14"></script>
 </body>
 </html>

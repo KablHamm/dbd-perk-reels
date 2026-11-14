@@ -760,6 +760,25 @@
   let challengeRoll = null;
   const challengeText = (entry) => (Array.isArray(entry) ? entry[0] : entry);
 
+  // Completed challenges, remembered on this device by their wording.
+  const DONE_KEY = "dbd-perk-randomiser.challenges-done";
+  const done = { survivor: new Set(), killer: new Set() };
+  try {
+    const saved = JSON.parse(localStorage.getItem(DONE_KEY) || "{}");
+    for (const side of Object.keys(done)) (saved[side] || []).forEach((text) => done[side].add(text));
+  } catch { /* storage unavailable or unreadable: start with nothing ticked */ }
+  const saveDone = () => {
+    try { localStorage.setItem(DONE_KEY, JSON.stringify({ survivor: [...done.survivor], killer: [...done.killer] })); } catch { /* storage unavailable */ }
+  };
+  const isDone = (side, entry) => done[side].has(challengeText(entry));
+  function toggleDone(side, entry) {
+    const text = challengeText(entry);
+    if (!done[side].delete(text)) done[side].add(text);
+    saveDone();
+  }
+  const challengeList = (side) => (window.DBD_CHALLENGES || {})[side] || [];
+  const doneCount = (side) => challengeList(side).filter((entry) => isDone(side, entry)).length;
+
   // The emblem for a challenge: a white drawing in a diamond, like a perk icon.
   // A "no" badge strikes it through in red; any other badge is a small label on its corner.
   function challengeEmblem(entry) {
@@ -791,21 +810,86 @@
     const side = state.side;
     const list = (window.DBD_CHALLENGES || {})[side] || [];
     const pick = lastChallenge[side];
+    const finished = pick >= 0 && isDone(side, list[pick]);
     challengeReel.classList.remove("spinning", "landed");
+    challengeReel.classList.toggle("done", finished);
+    challengeReel.classList.toggle("pickable", pick >= 0);
+    challengeReel.setAttribute("aria-pressed", String(finished));
     challengeBtn.disabled = !list.length;
     challengeStrip.replaceChildren(pick < 0
       ? challengeTile(list.length ? `Spin for a ${side} challenge` : "No challenges found.", true)
       : challengeTile(list[pick]));
     if (pick >= 0) challengeReel.classList.add("landed");
-    $("#challengeCount").textContent = pick < 0 ? "" : `Challenge ${pick + 1} of ${list.length}`;
+    const tally = `${doneCount(side)} of ${list.length} completed.`;
+    $("#challengeCount").textContent = pick < 0 ? tally
+      : finished ? `Completed. Click it again to undo. ${tally}`
+      : `Click the challenge when you've completed it. ${tally}`;
   }
+
+  // Click (or Enter / Space) on the landed challenge ticks it off, or un-ticks it.
+  function toggleShownChallenge() {
+    const side = state.side;
+    const pick = lastChallenge[side];
+    if (challengeRoll || pick < 0) return;
+    toggleDone(side, challengeList(side)[pick]);
+    renderChallenge();
+  }
+  challengeReel.addEventListener("click", toggleShownChallenge);
+  challengeReel.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    toggleShownChallenge();
+  });
+
+  // The full list for this side, with the completed ones ticked. Rows can be clicked too.
+  function renderChallengeList() {
+    const side = state.side;
+    const list = challengeList(side);
+    $("#challengesTitle").textContent = side === "killer" ? "Killer challenges" : "Survivor challenges";
+    $("#challengesCount").textContent = `${doneCount(side)} of ${list.length} completed`;
+    $("#challengesList").replaceChildren(...list.map((entry) => {
+      const row = el("button", "ch-row");
+      row.type = "button";
+      const finished = isDone(side, entry);
+      row.classList.toggle("done", finished);
+      row.setAttribute("aria-pressed", String(finished));
+      const emblem = challengeEmblem(entry);
+      if (emblem) row.append(emblem);
+      row.append(el("span", "ch-text", challengeText(entry)), el("span", "ch-tick", "✓"));
+      row.addEventListener("click", () => {
+        toggleDone(side, entry);
+        const now = isDone(side, entry);
+        row.classList.toggle("done", now);
+        row.setAttribute("aria-pressed", String(now));
+        $("#challengesCount").textContent = `${doneCount(side)} of ${list.length} completed`;
+      });
+      return row;
+    }));
+  }
+  $("#challengesBtn").addEventListener("click", () => {
+    renderChallengeList();
+    $("#challengesDialog").showModal();
+    $("#challengesList").scrollTop = 0;
+  });
+  // the reel behind the list shows the same ticks, so bring it up to date when the list closes
+  $("#challengesDialog").addEventListener("close", () => { if (!challengeRoll) renderChallenge(); });
+  $("#challengesReset").addEventListener("click", () => {
+    const side = state.side;
+    if (!doneCount(side) || !confirm(`Untick all ${side} challenges?`)) return;
+    challengeList(side).forEach((entry) => done[side].delete(challengeText(entry)));
+    saveDone();
+    renderChallengeList();
+  });
 
   function spinChallenge() {
     const side = state.side;
     const list = (window.DBD_CHALLENGES || {})[side] || [];
     if (!list.length || challengeRoll) return;
-    let pick = Math.floor(Math.random() * list.length);
-    if (list.length > 1 && pick === lastChallenge[side]) pick = (pick + 1) % list.length;
+    // prefer one that isn't completed yet, and never the one already showing
+    const others = list.map((_, i) => i).filter((i) => i !== lastChallenge[side] || list.length === 1);
+    const open = others.filter((i) => !isDone(side, list[i]));
+    const from = open.length ? open : others;
+    const pick = from[Math.floor(Math.random() * from.length)];
     const showing = challengeStrip.lastElementChild;
     lastChallenge[side] = pick;
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) return renderChallenge();
@@ -814,7 +898,7 @@
     const filler = Array.from({ length: 18 }, () => challengeTile(list[Math.floor(Math.random() * list.length)]));
     const tiles = [challengeTile(list[pick]), ...filler, showing || challengeTile("", true)];
     challengeStrip.replaceChildren(...tiles);
-    challengeReel.classList.remove("landed");
+    challengeReel.classList.remove("landed", "done", "pickable");
     challengeReel.classList.add("spinning");
     challengeBtn.disabled = true;
     $("#challengeCount").textContent = "";

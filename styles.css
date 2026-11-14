@@ -284,7 +284,74 @@ main { max-width: 760px; margin: 0 auto; padding: 16px; display: grid; gap: 28px
 }
 .challenge-reel.landed { animation: glow 0.7s ease-out; }
 .challenge-reel.landed .ctile { animation: land 0.35s ease-out; color: var(--accent); }
-.challenge-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.challenge-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+#challengeCount { min-height: 1.3em; margin-top: -4px; }
+
+/* completed challenges: green, with a tick */
+.challenge-reel { --done: #7cc68a; }
+.challenge-reel.pickable { cursor: pointer; }
+.challenge-reel.pickable:hover { border-color: var(--accent); }
+.challenge-reel:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.challenge-reel.done, .challenge-reel.done:hover { border-color: var(--done); }
+.challenge-reel.done .ctile { color: var(--done); }
+.challenge-reel.done .gem { --gem-colour: var(--done); }
+.challenge-reel.done .cbadge { background: var(--done); }
+.challenge-reel.done::before {
+  content: "✓";
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  z-index: 1;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--done);
+  color: #0c0a0b;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.challenge-reel.done .ctile { padding-right: 34px; }
+
+.ch-list { --done: #7cc68a; max-height: 56vh; overflow-y: auto; border: 1px solid var(--line); border-radius: 10px; }
+.ch-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 10px 10px 12px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.9rem;
+  line-height: 1.3;
+  text-align: left;
+  cursor: pointer;
+}
+.ch-row + .ch-row { border-top: 1px solid var(--line); }
+.ch-row:hover { background: var(--raised); }
+.ch-row .cgem-wrap { --gem: 24px; }
+.ch-row .gem { --gem: 24px; box-shadow: none; border-width: 1.5px; }
+.ch-row .cbadge { right: -4px; bottom: -1px; padding: 0 4px; font-size: 0.56rem; box-shadow: 0 0 0 1px #0a0809; }
+.ch-text { flex: 1 1 auto; }
+.ch-tick {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  color: transparent;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.ch-row.done { color: var(--done); }
+.ch-row.done .gem { --gem-colour: var(--done); }
+.ch-row.done .cbadge { background: var(--done); }
+.ch-row.done .ch-tick { background: var(--done); border-color: var(--done); color: #0c0a0b; }
 .ask form { display: flex; gap: 8px; }
 input[type="text"], input[type="search"], textarea, select {
   width: 100%;

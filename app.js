@@ -128,10 +128,10 @@
     try { localStorage.setItem(OWNED_KEY, JSON.stringify(plain)); } catch { /* storage unavailable */ }
   }
   const sideOf = (perk) => (DATA.killer.includes(perk) ? "killer" : "survivor");
-  const inPool = (perk) => !notOwned[sideOf(perk)].has(perk.owner);
+  const inPool = (perk) => !notOwned[sideOf(perk)].has(perk.owner) && !isHidden(perk);
   // The perks spins and suggestions may pick from.
   function poolFor(side) {
-    return perksFor(side).filter((perk) => !notOwned[side].has(perk.owner));
+    return perksFor(side).filter((perk) => !notOwned[side].has(perk.owner) && !isHidden(perk));
   }
   function renderOwners() {
     const side = state.side;
@@ -155,7 +155,7 @@
   }
   function renderOwnersCount() {
     const side = state.side;
-    $("#ownersCount").textContent = `${poolFor(side).length} of ${perksFor(side).length} perks are in your pool.`;
+    $("#ownersCount").textContent = `${poolFor(side).length} of ${shownPerks(side).length} perks are in your pool.`;
   }
   function setAllOwners(owned) {
     const side = state.side;
@@ -197,8 +197,42 @@
   // short summary written in the perk files.
   const FULL = Object.assign({ survivor: {}, killer: {} }, window.DBD_DESCRIPTIONS);
   function describe(perk) {
-    return FULL[DATA.killer.includes(perk) ? "killer" : "survivor"][slug(perk.name)] || perk.desc;
+    const own = FULL[DATA.killer.includes(perk) ? "killer" : "survivor"][slug(perk.name)] || perk.desc;
+    // a licensed original only says "Identical to <copy>." on the wiki: show the copy's real text instead
+    const copy = COPY_OF.get(perk);
+    if (!copy) return own;
+    const said = `Identical to ${copy.name}.`;
+    if (!own.startsWith(said)) return own;
+    // the borrowed text names the copy ("Will to Live activates..."): put this perk's own name back in
+    const borrowed = describe(copy).split(copy.name).join(perk.name);
+    return (borrowed + "\n" + own.slice(said.length).trim()).trim();
   }
+
+  /* ------------------------------------------------------------------
+     Identical twins
+     Some licensed perks (Decisive Strike) have a general copy under another name (Will to Live),
+     for players who don't have the character. Only one of each pair is shown and spun:
+     the original while its character is ticked as owned, the copy otherwise.
+     The pairs come from the wiki text, where the original reads "Identical to <copy>."
+     ------------------------------------------------------------------ */
+  const COPY_OF = new Map();      // original perk -> its general copy
+  const ORIGINAL_OF = new Map();  // general copy -> the original perk
+  for (const side of ["survivor", "killer"]) {
+    for (const perk of DATA[side]) {
+      const text = FULL[side][slug(perk.name)] || "";
+      if (!text.startsWith("Identical to ")) continue;
+      const copy = DATA[side].find((other) => other !== perk && text.startsWith(`Identical to ${other.name}.`));
+      if (copy) { COPY_OF.set(perk, copy); ORIGINAL_OF.set(copy, perk); }
+    }
+  }
+  function isHidden(perk) {
+    const side = sideOf(perk);
+    if (COPY_OF.has(perk)) return notOwned[side].has(perk.owner);                         // original, character not owned
+    if (ORIGINAL_OF.has(perk)) return !notOwned[side].has(ORIGINAL_OF.get(perk).owner);   // copy, original available
+    return false;
+  }
+  // every perk for a side, minus the twin that doesn't apply
+  const shownPerks = (side) => perksFor(side).filter((perk) => !isHidden(perk));
   function fillGem(gem, perk) {
     gem.className = "gem " + perkKind(perk);
     gem.replaceChildren();
@@ -427,7 +461,7 @@
      ------------------------------------------------------------------ */
   function renderBrowse() {
     const side = state.side;
-    const all = perksFor(side).slice().sort((a, b) => a.name.localeCompare(b.name));
+    const all = shownPerks(side).sort((a, b) => a.name.localeCompare(b.name));
     const search = $("#browseSearch").value.trim().toLowerCase();
     const shown = all.filter((p) => {
       if (state.filterTag && !p.tags.includes(state.filterTag)) return false;

@@ -376,16 +376,15 @@
   }
 
   function renderAskChips() {
-    const chips = BUILDS[state.side].filter((b) => b.chip).map((b) => {
-      const chip = el("button", "chip", b.label);
-      chip.type = "button";
-      chip.addEventListener("click", () => {
-        askInput.value = b.label + " build";
-        suggest(b.label);
-      });
-      return chip;
+    // quick ideas live in one dropdown; its first line is only a label
+    const first = el("option", "", "Quick build ideas…");
+    first.value = "";
+    const options = BUILDS[state.side].filter((b) => b.chip).map((b) => {
+      const option = el("option", "", b.label + " build");
+      option.value = b.label;
+      return option;
     });
-    $("#askChips").replaceChildren(...chips);
+    $("#askPick").replaceChildren(first, ...options);
     const sample = BUILDS[state.side].filter((b) => b.chip).slice(0, 2).map((b) => b.label.toLowerCase() + " build");
     askInput.placeholder = "e.g. " + sample.join(", ");
   }
@@ -402,6 +401,7 @@
     state.filterTag = "";
     try { localStorage.setItem(SIDE_KEY, side); } catch { /* storage unavailable */ }
     renderAskChips();
+    renderChallenge();
     renderReels();
   }
 
@@ -752,27 +752,67 @@
   $("#browseSearch").addEventListener("input", renderBrowse);
 
   // Random challenge: one from the chosen side's list, never the same one twice running
+  // It rolls in its own wide reel, the same way the perk reels do.
   const lastChallenge = { survivor: -1, killer: -1 };
-  function showChallenge() {
+  const challengeReel = $("#challengeReel");
+  const challengeStrip = $(".strip", challengeReel);
+  const challengeBtn = $("#challengeBtn");
+  let challengeRoll = null;
+  const challengeTile = (text, empty) => el("div", empty ? "ctile empty" : "ctile", text);
+
+  // Show what this side last landed on (or a prompt), without any rolling.
+  function renderChallenge() {
+    if (challengeRoll) { challengeRoll.onfinish = null; challengeRoll.cancel(); challengeRoll = null; }
     const side = state.side;
     const list = (window.DBD_CHALLENGES || {})[side] || [];
-    $("#challengeTitle").textContent = side === "killer" ? "Killer challenge" : "Survivor challenge";
-    if (!list.length) {
-      $("#challengeText").textContent = "No challenges found.";
-      $("#challengeCount").textContent = "";
-      return;
-    }
+    const pick = lastChallenge[side];
+    challengeReel.classList.remove("spinning", "landed");
+    challengeBtn.disabled = !list.length;
+    challengeStrip.replaceChildren(pick < 0
+      ? challengeTile(list.length ? `Spin for a ${side} challenge` : "No challenges found.", true)
+      : challengeTile(list[pick]));
+    if (pick >= 0) challengeReel.classList.add("landed");
+    $("#challengeCount").textContent = pick < 0 ? "" : `Challenge ${pick + 1} of ${list.length}`;
+  }
+
+  function spinChallenge() {
+    const side = state.side;
+    const list = (window.DBD_CHALLENGES || {})[side] || [];
+    if (!list.length || challengeRoll) return;
     let pick = Math.floor(Math.random() * list.length);
     if (list.length > 1 && pick === lastChallenge[side]) pick = (pick + 1) % list.length;
+    const showing = challengeStrip.lastElementChild;
     lastChallenge[side] = pick;
-    $("#challengeText").textContent = list[pick];
-    $("#challengeCount").textContent = `Challenge ${pick + 1} of ${list.length}`;
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return renderChallenge();
+
+    // Strip runs top to bottom: [the pick, ...random filler, what was showing]; it rolls down to the pick.
+    const filler = Array.from({ length: 18 }, () => challengeTile(list[Math.floor(Math.random() * list.length)]));
+    const tiles = [challengeTile(list[pick]), ...filler, showing || challengeTile("", true)];
+    challengeStrip.replaceChildren(...tiles);
+    challengeReel.classList.remove("landed");
+    challengeReel.classList.add("spinning");
+    challengeBtn.disabled = true;
+    $("#challengeCount").textContent = "";
+    const start = -((tiles.length - 1) / tiles.length) * 100;
+    challengeRoll = challengeStrip.animate(
+      [
+        { transform: `translateY(${start}%)`, filter: "blur(2.5px)" },
+        { transform: `translateY(${start * 0.12}%)`, filter: "blur(2px)", offset: 0.72 },
+        { transform: "translateY(0)", filter: "blur(0)" },
+      ],
+      { duration: 1700, easing: "cubic-bezier(.3,.1,.3,1)", fill: "both" }
+    );
+    challengeRoll.onfinish = renderChallenge;
   }
-  $("#challengeBtn").addEventListener("click", () => {
-    showChallenge();
-    $("#challengeDialog").showModal();
+  challengeBtn.addEventListener("click", spinChallenge);
+
+  $("#askPick").addEventListener("change", (event) => {
+    const label = event.target.value;
+    event.target.value = "";            // back to the "Quick build ideas…" line, ready for the next pick
+    if (!label) return;
+    askInput.value = label + " build";
+    suggest(label);
   });
-  $("#challengeAgain").addEventListener("click", showChallenge);
   $("#ownersBtn").addEventListener("click", () => {
     renderOwners();
     $("#ownersDialog").showModal();

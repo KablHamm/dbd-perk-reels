@@ -402,6 +402,7 @@
     try { localStorage.setItem(SIDE_KEY, side); } catch { /* storage unavailable */ }
     renderAskChips();
     renderChallenge();
+    renderCharacter();
     renderReels();
   }
 
@@ -983,6 +984,80 @@
     challengeRoll.onfinish = renderChallenge;
   }
   challengeBtn.addEventListener("click", spinChallenge);
+
+  /* ------------------------------------------------------------------
+     Random survivor / killer: picks a character you own, shown with their own perks
+     ------------------------------------------------------------------ */
+  const lastCharacter = { survivor: "", killer: "" };
+  const characterReel = $("#characterReel");
+  const characterStrip = $(".strip", characterReel);
+  const characterBtn = $("#characterBtn");
+  let characterRoll = null;
+  // every character on this side that is still ticked in "My survivors" / "My killers"
+  const charactersFor = (side) => [...new Set(perksFor(side).map((p) => p.owner))]
+    .filter((owner) => owner !== "General" && !notOwned[side].has(owner));
+
+  function characterTile(side, name, empty) {
+    const tile = el("div", empty ? "ctile empty" : "ctile chartile");
+    tile.append(el("span", "char-name", name));
+    if (!empty) {
+      const row = el("span", "char-perks");
+      perksFor(side).filter((p) => p.owner === name).forEach((perk) => {
+        const gem = fillGem(el("span"), perk);
+        gem.title = perk.name;
+        row.append(gem);
+      });
+      tile.append(row);
+    }
+    return tile;
+  }
+
+  function renderCharacter() {
+    if (characterRoll) { characterRoll.onfinish = null; characterRoll.cancel(); characterRoll = null; }
+    const side = state.side;
+    const names = charactersFor(side);
+    const pick = lastCharacter[side];
+    $("#characterTitle").textContent = `Random ${side}`;
+    characterBtn.textContent = `Spin ${side}`;
+    characterBtn.disabled = !names.length;
+    characterReel.classList.remove("spinning", "landed");
+    characterStrip.replaceChildren(pick
+      ? characterTile(side, pick)
+      : characterTile(side, names.length ? `Spin for a ${side}` : `No ${side}s ticked as owned.`, true));
+    if (pick) characterReel.classList.add("landed");
+    $("#characterCount").textContent = `From the ${names.length} ${side}${names.length === 1 ? "" : "s"} you own.`;
+  }
+
+  function spinCharacter() {
+    const side = state.side;
+    const names = charactersFor(side);
+    if (!names.length || characterRoll) return;
+    const others = names.filter((name) => name !== lastCharacter[side] || names.length === 1);
+    const pick = others[Math.floor(Math.random() * others.length)];
+    const showing = characterStrip.lastElementChild;
+    lastCharacter[side] = pick;
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return renderCharacter();
+
+    const filler = Array.from({ length: 18 }, () => characterTile(side, names[Math.floor(Math.random() * names.length)]));
+    const tiles = [characterTile(side, pick), ...filler, showing || characterTile(side, "", true)];
+    characterStrip.replaceChildren(...tiles);
+    characterReel.classList.remove("landed");
+    characterReel.classList.add("spinning");
+    characterBtn.disabled = true;
+    const start = -((tiles.length - 1) / tiles.length) * 100;
+    characterRoll = characterStrip.animate(
+      [
+        { transform: `translateY(${start}%)`, filter: "blur(2.5px)" },
+        { transform: `translateY(${start * 0.12}%)`, filter: "blur(2px)", offset: 0.72 },
+        { transform: "translateY(0)", filter: "blur(0)" },
+      ],
+      { duration: 1700, easing: "cubic-bezier(.3,.1,.3,1)", fill: "both" }
+    );
+    characterRoll.onfinish = renderCharacter;
+  }
+  characterBtn.addEventListener("click", spinCharacter);
+  // ticking characters on or off changes who can come up
+  $("#ownersDialog").addEventListener("close", () => { if (!characterRoll) renderCharacter(); });
 
   $("#askPick").addEventListener("change", (event) => {
     const label = event.target.value;

@@ -989,6 +989,13 @@
      Random survivor / killer: picks a character you own, shown with their own perks
      ------------------------------------------------------------------ */
   const lastCharacter = { survivor: "", killer: "" };
+  // characters whose portrait file on the wiki goes by a different name than their perks do
+  const PORTRAIT_FILE = {
+    "Detective Tapp": "david-tapp",
+    "Leon S. Kennedy": "leon-scott-kennedy",
+    "Yun-Jin Lee": "lee-yun-jin",
+    "Aestri Yazar / Baermar Uraz": "the-troupe",
+  };
   const characterReel = $("#characterReel");
   const characterStrip = $(".strip", characterReel);
   const characterBtn = $("#characterBtn");
@@ -999,16 +1006,24 @@
 
   function characterTile(side, name, empty) {
     const tile = el("div", empty ? "ctile empty" : "ctile chartile");
-    tile.append(el("span", "char-name", name));
-    if (!empty) {
-      const row = el("span", "char-perks");
-      perksFor(side).filter((p) => p.owner === name).forEach((perk) => {
-        const gem = fillGem(el("span"), perk);
-        gem.title = perk.name;
-        row.append(gem);
-      });
-      tile.append(row);
+    if (empty) {
+      tile.append(el("span", "char-name", name));
+      return tile;
     }
+    // portrait from the wiki; if there isn't one the tile simply shows the name and perks
+    const face = el("img", "char-face");
+    face.alt = "";
+    face.src = `portraits/${side}/${PORTRAIT_FILE[name] || slug(name)}.png`;
+    face.onerror = () => face.remove();
+    const words = el("span", "char-words");
+    const row = el("span", "char-perks");
+    perksFor(side).filter((p) => p.owner === name).forEach((perk) => {
+      const gem = fillGem(el("span"), perk);
+      gem.title = perk.name;
+      row.append(gem);
+    });
+    words.append(el("span", "char-name", name), row);
+    tile.append(face, words);
     return tile;
   }
 

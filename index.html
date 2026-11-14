@@ -11,7 +11,7 @@
   <link rel="apple-touch-icon" href="app-icons/icon-192.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
-  <link rel="stylesheet" href="styles.css?v=18">
+  <link rel="stylesheet" href="styles.css?v=19">
 </head>
 <body>
   <header class="top">
@@ -39,15 +39,6 @@
         <button type="button" class="btn" id="browseBtn">All survivor perks</button>      </div>
     </section>
 
-    <section class="character" aria-labelledby="characterTitle">
-      <h2 id="characterTitle">Random survivor</h2>
-      <div class="challenge-reel character-reel" id="characterReel" aria-live="polite"><div class="strip"></div></div>
-      <div class="challenge-foot">
-        <span class="hint" id="characterCount"></span>
-        <button type="button" class="btn primary" id="characterBtn">Spin survivor</button>
-      </div>
-    </section>
-
     <section class="ask" aria-labelledby="askTitle">
       <h2 id="askTitle">Ask for a build</h2>
       <form id="askForm" autocomplete="off">
@@ -55,6 +46,15 @@
         <button type="submit" class="btn" id="askBtn">Suggest</button>
       </form>
       <select id="askPick" aria-label="Quick build ideas"></select>
+    </section>
+
+    <section class="character" aria-labelledby="characterTitle">
+      <h2 id="characterTitle">Random survivor</h2>
+      <div class="challenge-reel character-reel" id="characterReel" aria-live="polite"><div class="strip"></div></div>
+      <div class="challenge-foot">
+        <span class="hint" id="characterCount"></span>
+        <button type="button" class="btn primary" id="characterBtn">Spin survivor</button>
+      </div>
     </section>
 
     <section class="challenge" aria-labelledby="challengeTitle">
@@ -165,8 +165,8 @@
   <script src="data/survivor-perks.js"></script>
   <script src="data/killer-perks.js"></script>
   <script src="data/descriptions.js"></script>
-  <script src="data/challenges.js?v=18"></script>
-  <script src="data/challenge-icons.js?v=18"></script>
-  <script src="app.js?v=18"></script>
+  <script src="data/challenges.js?v=19"></script>
+  <script src="data/challenge-icons.js?v=19"></script>
+  <script src="app.js?v=19"></script>
 </body>
 </html>

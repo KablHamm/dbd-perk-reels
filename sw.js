@@ -59,6 +59,6 @@ self.addEventListener("fetch", (event) => {
   const request = event.request;
   const url = new URL(request.url);
   if (request.method !== "GET" || url.origin !== self.location.origin) return; // e.g. GitHub API calls
-  const isPerkIcon = url.pathname.includes("/icons/");
+  const isPerkIcon = url.pathname.includes("/icons/") || url.pathname.includes("/portraits/");
   event.respondWith(isPerkIcon ? cacheFirst(request) : networkFirst(request));
 });

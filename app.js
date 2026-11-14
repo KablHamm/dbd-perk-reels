@@ -750,6 +750,29 @@
     browseDialog.showModal();
   });
   $("#browseSearch").addEventListener("input", renderBrowse);
+
+  // Random challenge: one from the chosen side's list, never the same one twice running
+  const lastChallenge = { survivor: -1, killer: -1 };
+  function showChallenge() {
+    const side = state.side;
+    const list = (window.DBD_CHALLENGES || {})[side] || [];
+    $("#challengeTitle").textContent = side === "killer" ? "Killer challenge" : "Survivor challenge";
+    if (!list.length) {
+      $("#challengeText").textContent = "No challenges found.";
+      $("#challengeCount").textContent = "";
+      return;
+    }
+    let pick = Math.floor(Math.random() * list.length);
+    if (list.length > 1 && pick === lastChallenge[side]) pick = (pick + 1) % list.length;
+    lastChallenge[side] = pick;
+    $("#challengeText").textContent = list[pick];
+    $("#challengeCount").textContent = `Challenge ${pick + 1} of ${list.length}`;
+  }
+  $("#challengeBtn").addEventListener("click", () => {
+    showChallenge();
+    $("#challengeDialog").showModal();
+  });
+  $("#challengeAgain").addEventListener("click", showChallenge);
   $("#ownersBtn").addEventListener("click", () => {
     renderOwners();
     $("#ownersDialog").showModal();

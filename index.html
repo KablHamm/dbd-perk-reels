@@ -11,7 +11,7 @@
   <link rel="apple-touch-icon" href="app-icons/icon-192.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
-  <link rel="stylesheet" href="styles.css?v=10">
+  <link rel="stylesheet" href="styles.css?v=11">
 </head>
 <body>
   <header class="top">
@@ -37,6 +37,7 @@
       <div class="actions">
         <button type="button" class="btn primary" id="spinBtn">Spin</button>
         <button type="button" class="btn" id="browseBtn">All survivor perks</button>
+        <button type="button" class="btn" id="challengeBtn">Random challenge</button>
       </div>
     </section>
 
@@ -102,6 +103,17 @@
     </div>
   </dialog>
 
+  <!-- Random challenge -->
+  <dialog id="challengeDialog" class="sheet small" aria-labelledby="challengeTitle">
+    <h3 id="challengeTitle">Survivor challenge</h3>
+    <p class="challenge-text" id="challengeText" aria-live="polite"></p>
+    <p class="hint" id="challengeCount"></p>
+    <div class="sheet-actions">
+      <button type="button" class="btn" data-close>Close</button>
+      <button type="button" class="btn primary" id="challengeAgain">Another</button>
+    </div>
+  </dialog>
+
   <!-- Check for new perks -->
   <dialog id="updateDialog" class="sheet small" aria-labelledby="updateTitle">
     <h3 id="updateTitle">Check for new perks</h3>
@@ -117,6 +129,7 @@
   <script src="data/survivor-perks.js"></script>
   <script src="data/killer-perks.js"></script>
   <script src="data/descriptions.js"></script>
-  <script src="app.js?v=10"></script>
+  <script src="data/challenges.js?v=11"></script>
+  <script src="app.js?v=11"></script>
 </body>
 </html>

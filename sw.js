@@ -5,7 +5,7 @@
     show up, and fall back to the saved copy when offline.
   - Perk icons: served from the saved copy once seen (they rarely change), fetched otherwise.
 */
-const CACHE = "perk-randomiser-v1";
+const CACHE = "perk-randomiser-v2";
 const CORE = [
   "./",
   "styles.css",
@@ -13,6 +13,7 @@ const CORE = [
   "data/survivor-perks.js",
   "data/killer-perks.js",
   "data/descriptions.js",
+  "data/challenges.js",
   "manifest.json",
   "app-icons/icon-192.png",
 ];

@@ -164,7 +164,7 @@
       c("Firm Grip", "Never lose a survivor you are carrying.", "hand", "keep"),
       c("No Rest", "After your first hit, never let all four survivors be healthy at once.", "heal", "no"),
       c("Sealed Fate", "Down the last survivor before they reach the hatch or a gate.", "hatch", "no"),
-      c("Totem Keeper", "Finish the trial with at least three hex totems still standing.", "totem", "3"),
+      c("Totem Keeper", "Finish the trial with at least two hex totems still standing.", "totem", "2"),
       c("Even Split", "End the trial with exactly two kills and two escapes.", "skull", "2-2"),
       c("One Gen Short", "Don't let the last generator be completed.", "generator", "last"),
     ],

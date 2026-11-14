@@ -138,7 +138,7 @@
     const owners = [...new Set(perksFor(side).map((p) => p.owner))].filter((o) => o !== "General").sort((a, b) => a.localeCompare(b));
     $("#ownersTitle").textContent = side === "killer" ? "Killers I own" : "Survivors I own";
     const boxes = owners.map((owner) => {
-      const wrap = el("label", "chip");
+      const wrap = el("label", "owner-row");
       const box = el("input");
       box.type = "checkbox";
       box.checked = !notOwned[side].has(owner);
@@ -754,6 +754,8 @@
     renderOwners();
     $("#ownersDialog").showModal();
   });
+  // the perk list behind this window dims perks that are out of the pool, so keep it in step
+  $("#ownersDialog").addEventListener("close", () => { if (browseDialog.open) renderBrowse(); });
   $("#ownersAll").addEventListener("click", () => setAllOwners(true));
   $("#ownersNone").addEventListener("click", () => setAllOwners(false));
 

@@ -264,6 +264,7 @@
     const previous = state.build[side];
     state.build[side] = target;
     state.note[side] = note || "";
+    saveLast();
     $("#buildNote").textContent = "";
     setBusy(true);
 
@@ -962,6 +963,7 @@
     const pick = from[Math.floor(Math.random() * from.length)];
     const showing = challengeStrip.lastElementChild;
     lastChallenge[side] = pick;
+    saveLast();
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) return renderChallenge();
 
     // Strip runs top to bottom: [the pick, ...random filler, what was showing]; it rolls down to the pick.
@@ -1051,6 +1053,7 @@
     const pick = others[Math.floor(Math.random() * others.length)];
     const showing = characterStrip.lastElementChild;
     lastCharacter[side] = pick;
+    saveLast();
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) return renderCharacter();
 
     const filler = Array.from({ length: 18 }, () => characterTile(side, names[Math.floor(Math.random() * names.length)]));
@@ -1126,6 +1129,40 @@
 
   let savedSide = "survivor";
   try { savedSide = localStorage.getItem(SIDE_KEY) === "killer" ? "killer" : "survivor"; } catch { /* storage unavailable */ }
+
+  /* ------------------------------------------------------------------
+     Remember what was last on screen (perks, character and challenge for each side),
+     so closing and reopening the app shows the same things.
+     ------------------------------------------------------------------ */
+  const LAST_KEY = "dbd-perk-randomiser.last";
+  function saveLast() {
+    const sides = ["survivor", "killer"];
+    const last = { build: {}, note: {}, character: {}, challenge: {} };
+    for (const side of sides) {
+      last.build[side] = state.build[side].map((perk) => perk.name);
+      last.note[side] = state.note[side] || "";
+      last.character[side] = lastCharacter[side];
+      const entry = challengeList(side)[lastChallenge[side]];
+      last.challenge[side] = entry ? challengeText(entry) : "";
+    }
+    try { localStorage.setItem(LAST_KEY, JSON.stringify(last)); } catch { /* storage unavailable */ }
+  }
+  try {
+    const last = JSON.parse(localStorage.getItem(LAST_KEY) || "{}");
+    for (const side of ["survivor", "killer"]) {
+      // perks are saved by name; a build only comes back if all four still exist
+      const perks = ((last.build || {})[side] || []).map((name) => perksFor(side).find((p) => p.name === name));
+      if (perks.length === reels.length && perks.every(Boolean)) {
+        state.build[side] = perks;
+        state.note[side] = (last.note || {})[side] || "";
+      }
+      const character = (last.character || {})[side];
+      if (character && perksFor(side).some((p) => p.owner === character)) lastCharacter[side] = character;
+      const wording = (last.challenge || {})[side];
+      if (wording) lastChallenge[side] = challengeList(side).findIndex((entry) => challengeText(entry) === (RENAMED[wording] || wording));
+    }
+  } catch { /* nothing saved, or storage unavailable */ }
+
   setSide(savedSide);
-  spinRandom();
+  if (!state.build[savedSide].length) spinRandom();
 })();

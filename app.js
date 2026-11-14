@@ -498,6 +498,11 @@
     const repoUrl = location.hostname.endsWith(".github.io")
       ? `https://github.com/${location.hostname.split(".")[0]}/${location.pathname.split("/").filter(Boolean)[0] || ""}`
       : "";
+    // With a GitHub key saved on this device, Send talks to GitHub directly (one press).
+    // Without one, Send is a link that opens GitHub with the message filled in.
+    const key = savedKey();
+    const api = repoUrl.replace("https://github.com/", "https://api.github.com/repos/");
+    $("#updateSetup").replaceChildren();
     status.textContent = "Checking…";
     let pending = [];
     try {
@@ -508,9 +513,10 @@
       status.textContent = "No new perks are waiting. This online copy checks the wiki by itself once a day, and any new perks it finds will show up here so you can set their release date.";
       return;
     }
-    status.textContent = repoUrl
-      ? "These perks are on the wiki but are held back until their release date. Pick a date and press Send. GitHub opens with the message already written: press its green Create button to confirm. Pick today to add the perks now. Changes show here a couple of minutes later."
-      : "These perks are on the wiki but are held back until their release date.";
+    const intro = "These perks are on the wiki but are held back until their release date. ";
+    status.textContent = !repoUrl ? intro
+      : key ? intro + "Pick a date and press Send. Pick today to add the perks now. Changes show here a couple of minutes later."
+        : intro + "Pick a date and press Send. GitHub opens with the message already written: press its green Create button to confirm. Pick today to add the perks now. Changes show here a couple of minutes later.";
 
     const today = new Date().toISOString().slice(0, 10);
     list.replaceChildren(...pending.map((group) => {
@@ -525,7 +531,41 @@
       label.append(input);
       row.append(label);
       item.append(row);
-      if (repoUrl) {
+      if (repoUrl && key) {
+        const send = el("button", "btn", "Send");
+        send.type = "button";
+        const note = el("small", "send-note");
+        send.addEventListener("click", async () => {
+          if (!input.value) { note.textContent = "Pick a date first, then press Send."; return; }
+          send.disabled = true;
+          note.textContent = "Sending…";
+          try {
+            const response = await fetch(api + "/issues", {
+              method: "POST",
+              headers: { Authorization: "Bearer " + key, Accept: "application/vnd.github+json" },
+              body: JSON.stringify({
+                title: `Release date: ${group.owner}`,
+                body: `Add ${group.owner}'s perks to the app on ${input.value}`,
+              }),
+            });
+            if (response.status === 201) {
+              note.textContent = "Sent. It will show as scheduled here in a couple of minutes.";
+            } else if (response.status === 401) {
+              note.textContent = "The saved key no longer works (it may have expired). Remove it below and set up a new one.";
+            } else if (response.status === 403 || response.status === 404) {
+              note.textContent = "The saved key is not allowed to do this. It needs Issues: Read and write on this repository.";
+            } else {
+              note.textContent = `GitHub refused the request (error ${response.status}). Try again later.`;
+            }
+          } catch {
+            note.textContent = "Could not reach GitHub. Check your connection and try again.";
+          } finally {
+            send.disabled = false;
+          }
+        });
+        row.append(send);
+        item.append(note);
+      } else if (repoUrl) {
         // A real link (not a script-opened window) so pop-up blockers leave it alone.
         const send = el("a", "btn", "Send");
         send.target = "_blank";
@@ -555,6 +595,73 @@
       }
       return item;
     }));
+    if (repoUrl) renderKeySetup(repoUrl, api, key, () => showOnlinePending(status, list));
+  }
+
+  // The GitHub key is kept only in this browser (never in the app's files). It lets Send
+  // post the date message for you, so you don't have to open GitHub each time.
+  const KEY_STORE = "dbd-perk-randomiser.github-key";
+  function savedKey() {
+    try { return localStorage.getItem(KEY_STORE) || ""; } catch { return ""; }
+  }
+  function renderKeySetup(repoUrl, api, key, rerender) {
+    const box = $("#updateSetup");
+    const repoName = repoUrl.split("/").pop();
+    if (key) {
+      const remove = el("button", "chip", "Remove key from this device");
+      remove.type = "button";
+      remove.addEventListener("click", () => {
+        try { localStorage.removeItem(KEY_STORE); } catch { /* storage unavailable */ }
+        rerender();
+      });
+      box.replaceChildren(el("p", "hint", "One-press sending is set up on this device."), remove);
+      return;
+    }
+
+    const details = el("details");
+    details.append(el("summary", "", "Send without opening GitHub (one-time setup)"));
+    const steps = el("ol");
+    const first = el("li", "", "Open ");
+    const link = el("a", "", "GitHub's new token page");
+    link.href = "https://github.com/settings/personal-access-tokens/new";
+    link.target = "_blank";
+    link.rel = "noopener";
+    first.append(link, " and give the token any name.");
+    steps.append(
+      first,
+      el("li", "", `Under Repository access choose "Only select repositories" and pick ${repoName}.`),
+      el("li", "", 'Under Permissions, Repository permissions, set Issues to "Read and write".'),
+      el("li", "", "Generate the token, copy it, and paste it below."),
+    );
+    const input = el("input");
+    input.type = "password";
+    input.placeholder = "Paste the token here";
+    input.autocomplete = "off";
+    input.setAttribute("aria-label", "GitHub token");
+    const save = el("button", "btn", "Save");
+    save.type = "button";
+    const row = el("div", "date-row");
+    row.append(input, save);
+    const note = el("p", "hint");
+    note.textContent = "The token is stored only in this browser. It can do nothing except open issues on this one repository.";
+    save.addEventListener("click", async () => {
+      const value = input.value.trim();
+      if (!value) return;
+      note.textContent = "Checking the token…";
+      try {
+        const response = await fetch(api, { headers: { Authorization: "Bearer " + value, Accept: "application/vnd.github+json" } });
+        if (!response.ok) {
+          note.textContent = "GitHub did not accept that token. Check you copied all of it and that it can access this repository.";
+          return;
+        }
+        localStorage.setItem(KEY_STORE, value);
+        rerender();
+      } catch {
+        note.textContent = "Could not check the token. Check your connection, and that this browser allows the site to save data.";
+      }
+    });
+    details.append(steps, row, note);
+    box.replaceChildren(details);
   }
 
   // dates: release dates typed into the window, as { "<side>|<character>": "YYYY-MM-DD" }.
@@ -565,6 +672,7 @@
     const addButton = $("#updateAdd");
     const needsServer = 'This needs the app to be started with "Start Perk Randomiser.bat" in the app folder. Close this tab, double-click that file, and try again.';
     addButton.hidden = true;
+    $("#updateSetup").replaceChildren();
     if (!add) list.replaceChildren();
     if (!updateDialog.open) updateDialog.showModal();
 

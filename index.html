@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Perk Randomiser</title>
-  <link rel="stylesheet" href="styles.css?v=7">
+  <link rel="stylesheet" href="styles.css?v=8">
 </head>
 <body>
   <header class="top">
@@ -30,6 +30,7 @@
       <div class="actions">
         <button type="button" class="btn primary" id="spinBtn">Spin</button>
         <button type="button" class="btn" id="browseBtn">All survivor perks</button>
+        <button type="button" class="btn" id="ownersBtn">My survivors</button>
       </div>
     </section>
 
@@ -76,6 +77,21 @@
     <div class="perk-list" id="perkList"></div>
   </dialog>
 
+  <!-- Characters I own -->
+  <dialog id="ownersDialog" class="sheet small" aria-labelledby="ownersTitle">
+    <h3 id="ownersTitle">Survivors I own</h3>
+    <p class="hint owners-hint">Untick a character to leave their perks out of spins and suggested builds. Tick them again when you get them. General perks are always included. Saved on this device.</p>
+    <div class="chips owners-tools">
+      <button type="button" class="chip" id="ownersAll">Tick all</button>
+      <button type="button" class="chip" id="ownersNone">Untick all</button>
+    </div>
+    <div class="chips owners-list" id="ownersList"></div>
+    <p class="hint" id="ownersCount" role="status"></p>
+    <div class="sheet-actions">
+      <button type="button" class="btn" data-close>Done</button>
+    </div>
+  </dialog>
+
   <!-- Check for new perks -->
   <dialog id="updateDialog" class="sheet small" aria-labelledby="updateTitle">
     <h3 id="updateTitle">Check for new perks</h3>
@@ -91,6 +107,6 @@
   <script src="data/survivor-perks.js"></script>
   <script src="data/killer-perks.js"></script>
   <script src="data/descriptions.js"></script>
-  <script src="app.js?v=7"></script>
+  <script src="app.js?v=8"></script>
 </body>
 </html>

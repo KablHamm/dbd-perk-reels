@@ -112,6 +112,60 @@
   }
 
   /* ------------------------------------------------------------------
+     Characters I own
+     Characters you untick are remembered on this device, and their perks are left out of
+     spins and suggested builds. General perks are always in. Only the unticked ones are
+     stored, so characters from new chapters start out ticked.
+     ------------------------------------------------------------------ */
+  const OWNED_KEY = "dbd-perk-randomiser.not-owned";
+  const notOwned = { survivor: new Set(), killer: new Set() };
+  try {
+    const saved = JSON.parse(localStorage.getItem(OWNED_KEY)) || {};
+    for (const side of ["survivor", "killer"]) (saved[side] || []).forEach((name) => notOwned[side].add(name));
+  } catch { /* nothing saved, or storage unavailable */ }
+  function saveOwned() {
+    const plain = { survivor: [...notOwned.survivor], killer: [...notOwned.killer] };
+    try { localStorage.setItem(OWNED_KEY, JSON.stringify(plain)); } catch { /* storage unavailable */ }
+  }
+  const sideOf = (perk) => (DATA.killer.includes(perk) ? "killer" : "survivor");
+  const inPool = (perk) => !notOwned[sideOf(perk)].has(perk.owner);
+  // The perks spins and suggestions may pick from.
+  function poolFor(side) {
+    return perksFor(side).filter((perk) => !notOwned[side].has(perk.owner));
+  }
+  function renderOwners() {
+    const side = state.side;
+    const owners = [...new Set(perksFor(side).map((p) => p.owner))].filter((o) => o !== "General").sort((a, b) => a.localeCompare(b));
+    $("#ownersTitle").textContent = side === "killer" ? "Killers I own" : "Survivors I own";
+    const boxes = owners.map((owner) => {
+      const wrap = el("label", "chip");
+      const box = el("input");
+      box.type = "checkbox";
+      box.checked = !notOwned[side].has(owner);
+      box.addEventListener("change", () => {
+        if (box.checked) notOwned[side].delete(owner); else notOwned[side].add(owner);
+        saveOwned();
+        renderOwnersCount();
+      });
+      wrap.append(box, owner);
+      return wrap;
+    });
+    $("#ownersList").replaceChildren(...boxes);
+    renderOwnersCount();
+  }
+  function renderOwnersCount() {
+    const side = state.side;
+    $("#ownersCount").textContent = `${poolFor(side).length} of ${perksFor(side).length} perks are in your pool.`;
+  }
+  function setAllOwners(owned) {
+    const side = state.side;
+    notOwned[side].clear();
+    if (!owned) perksFor(side).forEach((p) => { if (p.owner !== "General") notOwned[side].add(p.owner); });
+    saveOwned();
+    renderOwners();
+  }
+
+  /* ------------------------------------------------------------------
      Small DOM helpers
      ------------------------------------------------------------------ */
   function el(tag, className, text) {
@@ -205,7 +259,7 @@
   function spinTo(target, note) {
     if (state.spinning || target.length < reels.length) return;
     const side = state.side;
-    const pool = perksFor(side);
+    const pool = poolFor(side);
     const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
     const previous = state.build[side];
     state.build[side] = target;
@@ -249,7 +303,7 @@
   }
 
   function spinRandom() {
-    const pool = perksFor(state.side);
+    const pool = poolFor(state.side);
     if (pool.length < 4) return;
     spinTo(shuffled(pool).slice(0, 4), "");
   }
@@ -273,7 +327,7 @@
       if (otherMatched.length) { side = other(side); matched = otherMatched; }
     }
 
-    const pool = perksFor(side);
+    const pool = poolFor(side);
     const named = pool.filter((p) => query.includes(p.name.toLowerCase()));
     if (!matched.length && !named.length) {
       $("#buildNote").textContent = "I don't know that kind of build yet. Try one of the suggestions below, or a perk name.";
@@ -344,6 +398,7 @@
     document.documentElement.dataset.side = side;
     document.querySelectorAll(".side-toggle button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.side === side)));
     browseBtn.textContent = `All ${side} perks`;
+    $("#ownersBtn").textContent = side === "killer" ? "My killers" : "My survivors";
     state.filterTag = "";
     try { localStorage.setItem(SIDE_KEY, side); } catch { /* storage unavailable */ }
     renderAskChips();
@@ -359,7 +414,7 @@
     state.shownPerk = perk;
     fillGem($("#perkGem"), perk);
     $("#perkName").textContent = perk.name;
-    $("#perkOwner").textContent = perk.owner;
+    $("#perkOwner").textContent = perk.owner + (inPool(perk) ? "" : " · not in your pool");
     $("#perkDesc").textContent = describe(perk);
     $("#perkTags").replaceChildren(...perk.tags.filter((t) => TAGS[side][t]).map((t) => el("span", "chip", TAGS[side][t])));
     perkDialog.showModal();
@@ -395,7 +450,7 @@
     $("#browseTags").replaceChildren(...tagChips);
 
     const cards = shown.map((perk) => {
-      const card = el("button", "perk-card");
+      const card = el("button", "perk-card" + (inPool(perk) ? "" : " excluded"));
       card.type = "button";
       const text = el("span");
       text.append(el("span", "tname", perk.name), el("span", "towner", perk.owner));
@@ -695,6 +750,12 @@
     browseDialog.showModal();
   });
   $("#browseSearch").addEventListener("input", renderBrowse);
+  $("#ownersBtn").addEventListener("click", () => {
+    renderOwners();
+    $("#ownersDialog").showModal();
+  });
+  $("#ownersAll").addEventListener("click", () => setAllOwners(true));
+  $("#ownersNone").addEventListener("click", () => setAllOwners(false));
 
   document.querySelectorAll("dialog").forEach((dialog) => {
     dialog.addEventListener("click", (event) => {

@@ -758,7 +758,32 @@
   const challengeStrip = $(".strip", challengeReel);
   const challengeBtn = $("#challengeBtn");
   let challengeRoll = null;
-  const challengeTile = (text, empty) => el("div", empty ? "ctile empty" : "ctile", text);
+  const challengeText = (entry) => (Array.isArray(entry) ? entry[0] : entry);
+
+  // The emblem for a challenge: a white drawing in a diamond, like a perk icon.
+  // A "no" badge strikes it through in red; any other badge is a small label on its corner.
+  function challengeEmblem(entry) {
+    const [, icon, badge] = Array.isArray(entry) ? entry : [];
+    const art = (window.DBD_CHALLENGE_ICONS || {})[icon];
+    if (!art) return null;
+    const strike = badge === "no"
+      ? '<path d="M11 11L37 37" stroke="#0c0a0b" stroke-width="7"/><path d="M11 11L37 37" stroke="#ff4b45" stroke-width="3.6"/>'
+      : "";
+    const wrap = el("span", "cgem-wrap");
+    const gem = el("span", "gem");
+    gem.innerHTML = `<svg viewBox="-3 -3 54 54" aria-hidden="true" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${art}${strike}</svg>`;
+    wrap.append(gem);
+    if (badge && badge !== "no") wrap.append(el("span", "cbadge", badge));
+    return wrap;
+  }
+
+  function challengeTile(entry, empty) {
+    const tile = el("div", empty ? "ctile empty" : "ctile");
+    const emblem = empty ? null : challengeEmblem(entry);
+    if (emblem) tile.append(emblem);
+    tile.append(el("span", "ctext", challengeText(entry)));
+    return tile;
+  }
 
   // Show what this side last landed on (or a prompt), without any rolling.
   function renderChallenge() {

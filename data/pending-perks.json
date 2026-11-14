@@ -3,22 +3,59 @@
   "side": "survivor",
   "owner": "Sienna Shaw",
   "perks": [
-   {"name": "Best Gift Ever", "tags": ["items", "blind"]},
-   {"name": "Shared Trauma", "tags": ["altruism", "exhaustion", "team"]},
-   {"name": "Valkyrie's Rage", "tags": ["stun", "chase"]}
+   {
+    "name": "Best Gift Ever",
+    "tags": [
+     "items",
+     "blind"
+    ]
+   },
+   {
+    "name": "Shared Trauma",
+    "tags": [
+     "altruism",
+     "exhaustion",
+     "team"
+    ]
+   },
+   {
+    "name": "Valkyrie's Rage",
+    "tags": [
+     "stun",
+     "chase"
+    ]
+   }
   ],
   "release": null,
-  "issue": null
+  "issue": 1
  },
  {
   "side": "killer",
   "owner": "The Terrifier",
   "perks": [
-   {"name": "Funny Business", "tags": ["regression", "haste", "genblock"]},
-   {"name": "Kill Spree", "tags": ["endgame"]},
-   {"name": "Laughingstock", "tags": ["status", "aura"]}
+   {
+    "name": "Funny Business",
+    "tags": [
+     "regression",
+     "haste",
+     "genblock"
+    ]
+   },
+   {
+    "name": "Kill Spree",
+    "tags": [
+     "endgame"
+    ]
+   },
+   {
+    "name": "Laughingstock",
+    "tags": [
+     "status",
+     "aura"
+    ]
+   }
   ],
   "release": null,
-  "issue": null
+  "issue": 2
  }
 ]

@@ -1,4 +1,4 @@
-# Perk Randomiser
+# DBD Perks
 
 A fan-made build roller for Dead by Daylight. Spin four random perks for survivor or killer,
 ask for a type of build (stealth, gen rush, hex and so on), and browse every perk with its

@@ -1,6 +1,6 @@
 {
-  "name": "Perk Randomiser",
-  "short_name": "Perk Randomiser",
+  "name": "DBD Perks",
+  "short_name": "DBD Perks",
   "description": "A fan-made build roller for Dead by Daylight.",
   "start_url": "./",
   "scope": "./",

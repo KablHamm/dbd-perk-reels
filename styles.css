@@ -324,6 +324,8 @@ dialog.small { width: min(520px, calc(100vw - 24px)); }
 .update-list li { padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--raised); }
 .update-list small { display: block; color: var(--muted); }
 .update-list label { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 0.85rem; color: var(--muted); }
+.date-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px; }
+.date-row .btn { padding: 6px 14px; }
 .update-list input[type="date"] { padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
 
 #addForm { display: grid; gap: 12px; margin-top: 14px; }

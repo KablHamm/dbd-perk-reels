@@ -491,6 +491,55 @@
   const updateDialog = $("#updateDialog");
   let reloadOnClose = false;
 
+  // Online copy (GitHub Pages): the daily job keeps data/pending-perks.json up to date with
+  // the perks it is holding back. Show them with a date box each. The page cannot change the
+  // repository itself, so "Send" opens GitHub with a ready-written message for the job to read.
+  async function showOnlinePending(status, list) {
+    const repoUrl = location.hostname.endsWith(".github.io")
+      ? `https://github.com/${location.hostname.split(".")[0]}/${location.pathname.split("/").filter(Boolean)[0] || ""}`
+      : "";
+    status.textContent = "Checking…";
+    let pending = [];
+    try {
+      const response = await fetch("data/pending-perks.json?t=" + Date.now());
+      if (response.ok) pending = await response.json();
+    } catch { /* treated as nothing waiting */ }
+    if (!Array.isArray(pending) || !pending.length) {
+      status.textContent = "No new perks are waiting. This online copy checks the wiki by itself once a day, and any new perks it finds will show up here so you can set their release date.";
+      return;
+    }
+    status.textContent = repoUrl
+      ? "These perks are on the wiki but are held back until their release date. Pick a date and press Send. GitHub opens with the message already written: press its green Create button to confirm. Pick today to add the perks now. Changes show here a couple of minutes later."
+      : "These perks are on the wiki but are held back until their release date.";
+
+    const today = new Date().toISOString().slice(0, 10);
+    list.replaceChildren(...pending.map((group) => {
+      const item = el("li", "", group.owner);
+      item.append(el("small", "", `${group.side} · ${group.perks.map((p) => p.name).join(", ")}`));
+      const row = el("div", "date-row");
+      const label = el("label", "", group.release ? "Scheduled for" : "Release date");
+      const input = el("input");
+      input.type = "date";
+      input.min = today;
+      input.value = group.release || "";
+      label.append(input);
+      row.append(label);
+      if (repoUrl) {
+        const send = el("button", "btn", "Send");
+        send.type = "button";
+        send.addEventListener("click", () => {
+          if (!input.value) return input.focus();
+          const title = encodeURIComponent(`Release date: ${group.owner}`);
+          const body = encodeURIComponent(`Add ${group.owner}'s perks to the app on ${input.value}`);
+          window.open(`${repoUrl}/issues/new?title=${title}&body=${body}`, "_blank", "noopener");
+        });
+        row.append(send);
+      }
+      item.append(row);
+      return item;
+    }));
+  }
+
   // dates: release dates typed into the window, as { "<side>|<character>": "YYYY-MM-DD" }.
   async function checkForPerks(dates) {
     const add = Boolean(dates);
@@ -508,7 +557,7 @@
     }
     if (!["localhost", "127.0.0.1"].includes(location.hostname)) {
       // The online copy has no server to ask: a daily job on GitHub does the check instead.
-      status.textContent = "This online copy checks the wiki by itself once a day. When it finds new perks it opens an issue on the GitHub repository asking for their release date, and adds them to the app on that day.";
+      await showOnlinePending(status, list);
       return;
     }
     status.textContent = add ? "Saving…" : "Checking the wiki… this can take a few seconds.";

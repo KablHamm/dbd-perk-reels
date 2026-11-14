@@ -401,8 +401,31 @@ def github_sync():
         elif not wanted and comments[-1]["user"]["login"].lower() == owner:   # not answered yet
             unreadable.append(group["issue"])
 
+    # 1b. Read dates sent from the app's "Send" button: issues the owner opened that are
+    #     titled "Release date: <character>" with the date in the text.
+    requests = []
+    for issue in gh(f"repos/{repo}/issues?state=open&creator={owner}&per_page=50"):
+        title = issue["title"]
+        if "pull_request" in issue or not title.lower().startswith("release date:"):
+            continue
+        who = title.split(":", 1)[1].strip().lower()
+        group = next((g for g in load_pending() if g["owner"].lower() == who), None)
+        wanted = parse_date(issue.get("body") or "")
+        if group and wanted:
+            dates[group_key(group)] = wanted
+            requests.append((issue["number"], f"Thanks. {group['owner']}'s perks will be added to the app on **{wanted}** "
+                                              "(straight away if that is today)."))
+        elif not group:
+            requests.append((issue["number"], "No perks are waiting for a character with that name, so nothing was changed."))
+        else:
+            requests.append((issue["number"], "I couldn't find a date in that message, so nothing was changed. "
+                                              "Use the Send button in the app again, or write a date like `2026-12-02`."))
+
     # 2. Check the wiki, apply those dates, add whatever is due.
     result = run(dates=dates)
+    for number, reply in requests:
+        comment(number, reply)
+        gh(f"repos/{repo}/issues/{number}", {"state": "closed"}, method="PATCH")
 
     # 3. Report back on the issues, and open one for each newly found character.
     for group in result["released"]:

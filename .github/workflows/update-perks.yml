@@ -11,6 +11,8 @@ on:
   workflow_dispatch:
   issue_comment:
     types: [created]
+  issues:
+    types: [opened]
 
 permissions:
   contents: write
@@ -22,7 +24,8 @@ concurrency:
 
 jobs:
   update:
-    if: github.event_name != 'issue_comment' || github.event.comment.user.login == github.repository_owner
+    # replies and date messages only count when they come from the repository owner
+    if: (github.event_name != 'issue_comment' && github.event_name != 'issues') || github.event.sender.login == github.repository_owner
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

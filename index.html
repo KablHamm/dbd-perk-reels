@@ -11,7 +11,7 @@
   <link rel="apple-touch-icon" href="app-icons/icon-192.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
-  <link rel="stylesheet" href="styles.css?v=22">
+  <link rel="stylesheet" href="styles.css?v=23">
 </head>
 <body>
   <header class="top">
@@ -64,6 +64,15 @@
       <div class="challenge-foot">
         <button type="button" class="btn" id="challengesBtn">All challenges</button>
         <button type="button" class="btn primary" id="challengeBtn">Spin challenge</button>
+      </div>
+    </section>
+
+    <section class="achievements" aria-labelledby="achTitle">
+      <h2 id="achTitle">Achievements</h2>
+      <div class="ach-bar" aria-hidden="true"><span id="achFill"></span></div>
+      <div class="challenge-foot">
+        <span class="hint" id="achCount" role="status"></span>
+        <button type="button" class="btn" id="achBtn">View achievements</button>
       </div>
     </section>
   </main>
@@ -123,14 +132,28 @@
   <!-- All challenges -->
   <dialog id="challengesDialog" class="sheet small" aria-labelledby="challengesTitle">
     <div class="browse-head">
-      <h3 id="challengesTitle">Survivor achievements</h3>
+      <h3 id="challengesTitle">Survivor challenges</h3>
       <span class="count" id="challengesCount" role="status"></span>
       <button type="button" class="btn icon" data-close aria-label="Close">✕</button>
     </div>
-    <p class="hint owners-hint">Click a challenge to tick it off, and again to untick it. Saved on this device.</p>
+    <p class="hint owners-hint">Click a challenge to tick it off, and again to untick it. Resetting clears the ticks so you can do them again; your achievements stay unlocked.</p>
     <div class="ch-list" id="challengesList"></div>
     <div class="sheet-actions">
-      <button type="button" class="btn" id="challengesReset">Untick all</button>
+      <button type="button" class="btn" id="challengesReset">Reset challenges</button>
+      <button type="button" class="btn" data-close>Done</button>
+    </div>
+  </dialog>
+
+  <!-- Achievements: a permanent record of every challenge completed at least once -->
+  <dialog id="achDialog" class="sheet small" aria-labelledby="achDialogTitle">
+    <div class="browse-head">
+      <h3 id="achDialogTitle">Survivor achievements</h3>
+      <span class="count" id="achDialogCount"></span>
+      <button type="button" class="btn icon" data-close aria-label="Close">✕</button>
+    </div>
+    <p class="hint owners-hint">An achievement unlocks the first time you complete its challenge, and stays unlocked even if you untick or reset your challenges. Saved on this device.</p>
+    <div class="ch-list" id="achList"></div>
+    <div class="sheet-actions">
       <button type="button" class="btn" data-close>Done</button>
     </div>
   </dialog>
@@ -165,8 +188,8 @@
   <script src="data/survivor-perks.js"></script>
   <script src="data/killer-perks.js"></script>
   <script src="data/descriptions.js"></script>
-  <script src="data/challenges.js?v=22"></script>
-  <script src="data/challenge-icons.js?v=22"></script>
-  <script src="app.js?v=22"></script>
+  <script src="data/challenges.js?v=23"></script>
+  <script src="data/challenge-icons.js?v=23"></script>
+  <script src="app.js?v=23"></script>
 </body>
 </html>

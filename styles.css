@@ -225,8 +225,16 @@ main { max-width: 760px; margin: 0 auto; padding: 16px; display: grid; gap: 28px
 .btn.danger { border-color: color-mix(in srgb, var(--danger) 60%, var(--line)); color: #f0a09d; margin-right: auto; }
 .btn.icon { padding: 8px 12px; }
 
-.ask h2, .challenge h2, .character h2, .sheet h3 { text-transform: uppercase; font-size: 1.1rem; }
-.ask, .challenge, .character { display: grid; gap: 12px; }
+.ask h2, .challenge h2, .character h2, .achievements h2, .sheet h3 { text-transform: uppercase; font-size: 1.1rem; }
+.ask, .challenge, .character, .achievements { display: grid; gap: 12px; }
+
+/* achievements: progress bar on the page, and a read-only list */
+.ach-bar { height: 10px; border-radius: 999px; border: 1px solid var(--line); background: #0a0809; overflow: hidden; }
+.ach-bar span { display: block; height: 100%; width: 0; background: #7cc68a; border-radius: 999px; transition: width 0.4s ease-out; }
+.ach-row, .ach-row:hover { cursor: default; background: transparent; }
+.ach-row.locked { opacity: 0.45; }
+.ach-state { flex: 0 0 auto; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.ach-row.done .ach-state { color: var(--done); }
 
 /* random survivor / killer reel: name with that character's own perks under it */
 .character-reel { --ch: 112px; }

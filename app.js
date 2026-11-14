@@ -817,13 +817,37 @@
     try { localStorage.setItem(DONE_KEY, JSON.stringify({ survivor: [...done.survivor], killer: [...done.killer] })); } catch { /* storage unavailable */ }
   };
   const isDone = (side, entry) => done[side].has(challengeText(entry));
+  // Achievements: unlocked the first time a challenge is completed, and kept for good.
+  // Unticking a challenge, or "Untick all", only clears the tick - never the achievement.
+  const ACH_KEY = "dbd-perk-randomiser.achievements";
+  const unlocked = { survivor: new Set(), killer: new Set() };
+  try {
+    const saved = JSON.parse(localStorage.getItem(ACH_KEY) || "{}");
+    for (const side of Object.keys(unlocked)) (saved[side] || []).forEach((text) => unlocked[side].add(RENAMED[text] || text));
+  } catch { /* storage unavailable or unreadable */ }
+  const saveUnlocked = () => {
+    try { localStorage.setItem(ACH_KEY, JSON.stringify({ survivor: [...unlocked.survivor], killer: [...unlocked.killer] })); } catch { /* storage unavailable */ }
+  };
+  // challenges ticked before achievements were kept separately count as unlocked too
+  for (const side of Object.keys(unlocked)) done[side].forEach((text) => unlocked[side].add(text));
+  saveUnlocked();
+  const isUnlocked = (side, entry) => unlocked[side].has(challengeText(entry));
+
+  // Tick or untick a challenge. Returns true when this tick unlocked its achievement for the first time.
   function toggleDone(side, entry) {
     const text = challengeText(entry);
-    if (!done[side].delete(text)) done[side].add(text);
+    let fresh = false;
+    if (!done[side].delete(text)) {
+      done[side].add(text);
+      fresh = !unlocked[side].has(text);
+      if (fresh) { unlocked[side].add(text); saveUnlocked(); }
+    }
     saveDone();
+    return fresh;
   }
   const challengeList = (side) => (window.DBD_CHALLENGES || {})[side] || [];
   const doneCount = (side) => challengeList(side).filter((entry) => isDone(side, entry)).length;
+  const unlockedCount = (side) => challengeList(side).filter((entry) => isUnlocked(side, entry)).length;
 
   // The emblem for a challenge: a white drawing in a diamond, like a perk icon.
   // A "no" badge strikes it through in red; any other badge is a small label on its corner.
@@ -900,12 +924,44 @@
   }
 
   // After a challenge is ticked: announce it, and bring up the tally if that was the last one.
-  function celebrate(side, entry) {
+  function celebrate(side, entry, fresh) {
+    renderAchievementSummary();
     if (!isDone(side, entry)) return;
-    showAchievement(entry);
+    if (fresh) showAchievement(entry);      // only the first time; re-doing a challenge after a reset is silent
     const list = challengeList(side);
     if (doneCount(side) === list.length) setTimeout(() => showTally(side), 900);
   }
+
+  // The Achievements section: a progress bar and a count for the chosen side.
+  function renderAchievementSummary() {
+    const side = state.side;
+    const total = challengeList(side).length;
+    const have = unlockedCount(side);
+    $("#achCount").textContent = `${have} of ${total} ${side} achievements unlocked.`;
+    $("#achFill").style.width = total ? `${(have / total) * 100}%` : "0";
+  }
+  // The full achievement list. It is a record, not a checklist: nothing here can be unticked.
+  function renderAchievements() {
+    const side = state.side;
+    const list = challengeList(side);
+    $("#achDialogTitle").textContent = side === "killer" ? "Killer achievements" : "Survivor achievements";
+    $("#achDialogCount").textContent = `${unlockedCount(side)} of ${list.length} unlocked`;
+    // unlocked ones first, each group in its usual order
+    const ordered = [...list.filter((e) => isUnlocked(side, e)), ...list.filter((e) => !isUnlocked(side, e))];
+    $("#achList").replaceChildren(...ordered.map((entry) => {
+      const got = isUnlocked(side, entry);
+      const row = el("div", got ? "ch-row ach-row done" : "ch-row ach-row locked");
+      const emblem = challengeEmblem(entry);
+      if (emblem) row.append(emblem);
+      row.append(challengeWords(entry, "ch-text"), el("span", "ach-state", got ? "Unlocked" : "Locked"));
+      return row;
+    }));
+  }
+  $("#achBtn").addEventListener("click", () => {
+    renderAchievements();
+    $("#achDialog").showModal();
+    $("#achList").scrollTop = 0;
+  });
 
   // Show what this side last landed on (or a prompt), without any rolling.
   function renderChallenge() {
@@ -924,6 +980,7 @@
       : challengeTile(list[pick]));
     if (pick >= 0) challengeReel.classList.add("landed");
     const tally = `${doneCount(side)} of ${list.length} completed.`;
+    renderAchievementSummary();
     // always shown, also before the first spin and while the reel is rolling
     $("#challengeCount").textContent = finished
       ? `Completed. Click it again to undo. ${tally}`
@@ -935,9 +992,9 @@
     const side = state.side;
     const pick = lastChallenge[side];
     if (challengeRoll || pick < 0) return;
-    toggleDone(side, challengeList(side)[pick]);
+    const fresh = toggleDone(side, challengeList(side)[pick]);
     renderChallenge();
-    celebrate(side, challengeList(side)[pick]);
+    celebrate(side, challengeList(side)[pick], fresh);
   }
   challengeReel.addEventListener("click", toggleShownChallenge);
   challengeReel.addEventListener("keydown", (event) => {
@@ -950,7 +1007,7 @@
   function renderChallengeList() {
     const side = state.side;
     const list = challengeList(side);
-    $("#challengesTitle").textContent = side === "killer" ? "Killer achievements" : "Survivor achievements";
+    $("#challengesTitle").textContent = side === "killer" ? "Killer challenges" : "Survivor challenges";
     $("#challengesCount").textContent = `${doneCount(side)} of ${list.length} completed`;
     $("#challengesList").replaceChildren(...list.map((entry) => {
       const row = el("button", "ch-row");
@@ -962,12 +1019,12 @@
       if (emblem) row.append(emblem);
       row.append(challengeWords(entry, "ch-text"), el("span", "ch-tick", "✓"));
       row.addEventListener("click", () => {
-        toggleDone(side, entry);
+        const fresh = toggleDone(side, entry);
         const now = isDone(side, entry);
         row.classList.toggle("done", now);
         row.setAttribute("aria-pressed", String(now));
         $("#challengesCount").textContent = `${doneCount(side)} of ${list.length} completed`;
-        celebrate(side, entry);
+        celebrate(side, entry, fresh);
       });
       return row;
     }));
@@ -981,7 +1038,7 @@
   $("#challengesDialog").addEventListener("close", () => { if (!challengeRoll) renderChallenge(); });
   $("#challengesReset").addEventListener("click", () => {
     const side = state.side;
-    if (!doneCount(side) || !confirm(`Untick all ${side} challenges?`)) return;
+    if (!doneCount(side) || !confirm(`Reset all ${side} challenges? This clears the ticks so you can do them again. Your achievements stay unlocked.`)) return;
     challengeList(side).forEach((entry) => done[side].delete(challengeText(entry)));
     saveDone();
     renderChallengeList();

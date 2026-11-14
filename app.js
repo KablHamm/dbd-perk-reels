@@ -524,18 +524,35 @@
       input.value = group.release || "";
       label.append(input);
       row.append(label);
-      if (repoUrl) {
-        const send = el("button", "btn", "Send");
-        send.type = "button";
-        send.addEventListener("click", () => {
-          if (!input.value) return input.focus();
-          const title = encodeURIComponent(`Release date: ${group.owner}`);
-          const body = encodeURIComponent(`Add ${group.owner}'s perks to the app on ${input.value}`);
-          window.open(`${repoUrl}/issues/new?title=${title}&body=${body}`, "_blank", "noopener");
-        });
-        row.append(send);
-      }
       item.append(row);
+      if (repoUrl) {
+        // A real link (not a script-opened window) so pop-up blockers leave it alone.
+        const send = el("a", "btn", "Send");
+        send.target = "_blank";
+        send.rel = "noopener";
+        const note = el("small", "send-note");
+        const refresh = () => {
+          if (input.value) {
+            const title = encodeURIComponent(`Release date: ${group.owner}`);
+            const body = encodeURIComponent(`Add ${group.owner}'s perks to the app on ${input.value}`);
+            send.href = `${repoUrl}/issues/new?title=${title}&body=${body}`;
+            note.textContent = "";
+          } else {
+            send.removeAttribute("href");
+          }
+        };
+        input.addEventListener("input", refresh);
+        input.addEventListener("change", refresh);
+        send.addEventListener("click", () => {
+          refresh();
+          note.textContent = input.value
+            ? "GitHub should have opened in a new tab. Press its green Create button there to finish. If no tab opened, allow pop-ups for this site and press Send again."
+            : "Pick a date first, then press Send.";
+        });
+        refresh();
+        row.append(send);
+        item.append(note);
+      }
       return item;
     }));
   }

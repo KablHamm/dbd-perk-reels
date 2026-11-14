@@ -759,13 +759,20 @@
   const challengeBtn = $("#challengeBtn");
   let challengeRoll = null;
   const challengeText = (entry) => (Array.isArray(entry) ? entry[0] : entry);
+  const challengeTitle = (entry) => (Array.isArray(entry) && entry[3]) || "";
+  // Old wording -> new wording, so a tick survives a challenge being reworded.
+  const RENAMED = {
+    "Cleanse or bless every totem you find.": "Cleanse or bless every totem in one trial.",
+    "Play the four perks on the reels exactly as spun, with no swaps.": "Play the four perks on the reels exactly as spun, with no item or offering.",
+    "Play the four perks on the reels exactly as spun, with no add-ons.": "Play the four perks on the reels exactly as spun, with no add-ons or offering.",
+  };
 
   // Completed challenges, remembered on this device by their wording.
   const DONE_KEY = "dbd-perk-randomiser.challenges-done";
   const done = { survivor: new Set(), killer: new Set() };
   try {
     const saved = JSON.parse(localStorage.getItem(DONE_KEY) || "{}");
-    for (const side of Object.keys(done)) (saved[side] || []).forEach((text) => done[side].add(text));
+    for (const side of Object.keys(done)) (saved[side] || []).forEach((text) => done[side].add(RENAMED[text] || text));
   } catch { /* storage unavailable or unreadable: start with nothing ticked */ }
   const saveDone = () => {
     try { localStorage.setItem(DONE_KEY, JSON.stringify({ survivor: [...done.survivor], killer: [...done.killer] })); } catch { /* storage unavailable */ }
@@ -800,8 +807,65 @@
     const tile = el("div", empty ? "ctile empty" : "ctile");
     const emblem = empty ? null : challengeEmblem(entry);
     if (emblem) tile.append(emblem);
-    tile.append(el("span", "ctext", challengeText(entry)));
+    tile.append(challengeWords(entry, "cbody"));
     return tile;
+  }
+
+  // Achievement name over the challenge itself.
+  function challengeWords(entry, cls) {
+    const words = el("span", cls);
+    const title = challengeTitle(entry);
+    if (title) words.append(el("span", "ctitle", title));
+    words.append(el("span", "ctext", challengeText(entry)));
+    return words;
+  }
+
+  // "Achievement unlocked" pop-up. It is a popover so it also shows above an open window.
+  const toast = $("#achievementToast");
+  let toastTimer = 0;
+  function showAchievement(entry) {
+    const emblem = challengeEmblem(entry);
+    const words = el("span", "toast-words");
+    words.append(el("span", "toast-kicker", "Achievement unlocked"), el("span", "toast-title", challengeTitle(entry) || challengeText(entry)));
+    if (challengeTitle(entry)) words.append(el("span", "toast-text", challengeText(entry)));
+    toast.replaceChildren(...(emblem ? [emblem, words] : [words]));
+    try {
+      if (toast.matches(":popover-open")) toast.hidePopover();
+      toast.showPopover();
+    } catch { toast.classList.add("shown"); }   // older browser: plain fixed box
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+      try { toast.hidePopover(); } catch { toast.classList.remove("shown"); }
+    }, 3800);
+  }
+
+  // Tally screen, shown when every challenge for a side has been completed.
+  function showTally(side) {
+    const list = challengeList(side);
+    const other = side === "killer" ? "survivor" : "killer";
+    const otherList = challengeList(other);
+    const bothDone = otherList.length && doneCount(other) === otherList.length;
+    $("#tallyTitle").textContent = `Every ${side} challenge completed`;
+    $("#tallyScore").textContent = `${doneCount(side)} / ${list.length}`;
+    $("#tallyGrid").replaceChildren(...list.map((entry) => {
+      const emblem = challengeEmblem(entry) || el("span", "cgem-wrap");
+      emblem.title = challengeTitle(entry) || challengeText(entry);
+      return emblem;
+    }));
+    $("#tallyOther").textContent = bothDone
+      ? `And every ${other} challenge too: all ${list.length + otherList.length} achievements unlocked.`
+      : `${other[0].toUpperCase() + other.slice(1)} challenges: ${doneCount(other)} of ${otherList.length} completed.`;
+    const dialog = $("#tallyDialog");
+    dialog.dataset.side = side;
+    if (!dialog.open) dialog.showModal();
+  }
+
+  // After a challenge is ticked: announce it, and bring up the tally if that was the last one.
+  function celebrate(side, entry) {
+    if (!isDone(side, entry)) return;
+    showAchievement(entry);
+    const list = challengeList(side);
+    if (doneCount(side) === list.length) setTimeout(() => showTally(side), 900);
   }
 
   // Show what this side last landed on (or a prompt), without any rolling.
@@ -833,6 +897,7 @@
     if (challengeRoll || pick < 0) return;
     toggleDone(side, challengeList(side)[pick]);
     renderChallenge();
+    celebrate(side, challengeList(side)[pick]);
   }
   challengeReel.addEventListener("click", toggleShownChallenge);
   challengeReel.addEventListener("keydown", (event) => {
@@ -845,7 +910,7 @@
   function renderChallengeList() {
     const side = state.side;
     const list = challengeList(side);
-    $("#challengesTitle").textContent = side === "killer" ? "Killer challenges" : "Survivor challenges";
+    $("#challengesTitle").textContent = side === "killer" ? "Killer achievements" : "Survivor achievements";
     $("#challengesCount").textContent = `${doneCount(side)} of ${list.length} completed`;
     $("#challengesList").replaceChildren(...list.map((entry) => {
       const row = el("button", "ch-row");
@@ -855,13 +920,14 @@
       row.setAttribute("aria-pressed", String(finished));
       const emblem = challengeEmblem(entry);
       if (emblem) row.append(emblem);
-      row.append(el("span", "ch-text", challengeText(entry)), el("span", "ch-tick", "✓"));
+      row.append(challengeWords(entry, "ch-text"), el("span", "ch-tick", "✓"));
       row.addEventListener("click", () => {
         toggleDone(side, entry);
         const now = isDone(side, entry);
         row.classList.toggle("done", now);
         row.setAttribute("aria-pressed", String(now));
         $("#challengesCount").textContent = `${doneCount(side)} of ${list.length} completed`;
+        celebrate(side, entry);
       });
       return row;
     }));

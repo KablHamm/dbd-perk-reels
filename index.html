@@ -11,7 +11,7 @@
   <link rel="apple-touch-icon" href="app-icons/icon-192.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
-  <link rel="stylesheet" href="styles.css?v=14">
+  <link rel="stylesheet" href="styles.css?v=15">
 </head>
 <body>
   <header class="top">
@@ -114,7 +114,7 @@
   <!-- All challenges -->
   <dialog id="challengesDialog" class="sheet small" aria-labelledby="challengesTitle">
     <div class="browse-head">
-      <h3 id="challengesTitle">Survivor challenges</h3>
+      <h3 id="challengesTitle">Survivor achievements</h3>
       <span class="count" id="challengesCount" role="status"></span>
       <button type="button" class="btn icon" data-close aria-label="Close">✕</button>
     </div>
@@ -125,6 +125,21 @@
       <button type="button" class="btn" data-close>Done</button>
     </div>
   </dialog>
+
+  <!-- Tally: every challenge for a side completed -->
+  <dialog id="tallyDialog" class="sheet small tally" aria-labelledby="tallyTitle">
+    <p class="tally-kicker">Final tally</p>
+    <h3 id="tallyTitle">Every survivor challenge completed</h3>
+    <p class="tally-score" id="tallyScore"></p>
+    <div class="tally-grid" id="tallyGrid"></div>
+    <p class="hint" id="tallyOther"></p>
+    <div class="sheet-actions">
+      <button type="button" class="btn primary" data-close>Close</button>
+    </div>
+  </dialog>
+
+  <!-- Achievement unlocked -->
+  <div id="achievementToast" popover="manual" role="status"></div>
 
   <!-- Check for new perks -->
   <dialog id="updateDialog" class="sheet small" aria-labelledby="updateTitle">
@@ -141,8 +156,8 @@
   <script src="data/survivor-perks.js"></script>
   <script src="data/killer-perks.js"></script>
   <script src="data/descriptions.js"></script>
-  <script src="data/challenges.js?v=14"></script>
-  <script src="data/challenge-icons.js?v=14"></script>
-  <script src="app.js?v=14"></script>
+  <script src="data/challenges.js?v=15"></script>
+  <script src="data/challenge-icons.js?v=15"></script>
+  <script src="app.js?v=15"></script>
 </body>
 </html>

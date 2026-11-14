@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en" data-side="survivor">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Perk Randomiser</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <h1>Perk Randomiser</h1>
+      <p>A build roller for Dead by Daylight</p>
+    </div>
+    <div class="side-toggle" role="group" aria-label="Choose a side">
+      <button type="button" data-side="survivor" aria-pressed="true">Survivor</button>
+      <button type="button" data-side="killer" aria-pressed="false">Killer</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="machine" aria-label="Perk build">
+      <div class="reels" id="reels">
+        <button type="button" class="reel" data-slot="0"><span class="strip"></span></button>
+        <button type="button" class="reel" data-slot="1"><span class="strip"></span></button>
+        <button type="button" class="reel" data-slot="2"><span class="strip"></span></button>
+        <button type="button" class="reel" data-slot="3"><span class="strip"></span></button>
+      </div>
+      <p class="build-note" id="buildNote" aria-live="polite"></p>
+      <div class="actions">
+        <button type="button" class="btn primary" id="spinBtn">Spin</button>
+        <button type="button" class="btn" id="browseBtn">All survivor perks</button>
+      </div>
+    </section>
+
+    <section class="ask" aria-labelledby="askTitle">
+      <h2 id="askTitle">Ask for a build</h2>
+      <form id="askForm" autocomplete="off">
+        <input type="text" id="askInput" aria-label="Describe the build you want" placeholder="e.g. stealth build">
+        <button type="submit" class="btn" id="askBtn">Suggest</button>
+      </form>
+      <div class="chips" id="askChips"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Fan-made and not affiliated with Behaviour Interactive. Perk descriptions and icons come from the <a href="https://deadbydaylight.wiki.gg/wiki/Perks" target="_blank" rel="noopener">Dead by Daylight Wiki</a>.</p>
+  </footer>
+
+  <!-- Perk detail -->
+  <dialog id="perkDialog" class="sheet small" aria-labelledby="perkName">
+    <div class="perk-head">
+      <span class="gem" id="perkGem"></span>
+      <div>
+        <h3 id="perkName"></h3>
+        <p class="owner" id="perkOwner"></p>
+      </div>
+    </div>
+    <p class="desc" id="perkDesc"></p>
+    <div class="tags" id="perkTags"></div>
+    <div class="sheet-actions">
+      <button type="button" class="btn danger" id="perkDelete" hidden>Delete perk</button>
+      <button type="button" class="btn" data-close>Close</button>
+    </div>
+  </dialog>
+
+  <!-- All perks -->
+  <dialog id="browseDialog" class="sheet large" aria-labelledby="browseTitle">
+    <div class="browse-head">
+      <h3 id="browseTitle">Survivor perks</h3>
+      <span class="count" id="browseCount"></span>
+      <button type="button" class="btn" id="checkBtn">Check for new perks</button>
+      <button type="button" class="btn" id="addBtn">Add a perk</button>
+      <button type="button" class="btn icon" data-close aria-label="Close">✕</button>
+    </div>
+    <input type="search" id="browseSearch" aria-label="Search perks" placeholder="Search by name, character or effect">
+    <div class="chips" id="browseTags"></div>
+    <div class="perk-list" id="perkList"></div>
+  </dialog>
+
+  <!-- Add a perk -->
+  <dialog id="addDialog" class="sheet small" aria-labelledby="addTitle">
+    <h3 id="addTitle">Add a perk</h3>
+    <form id="addForm" autocomplete="off">
+      <label>Side
+        <select id="addSide">
+          <option value="survivor">Survivor</option>
+          <option value="killer">Killer</option>
+        </select>
+      </label>
+      <label>Perk name
+        <input type="text" id="addName" required maxlength="60">
+      </label>
+      <label>Character
+        <input type="text" id="addOwner" maxlength="60" placeholder="Optional">
+      </label>
+      <label>What it does
+        <textarea id="addDesc" rows="3" required maxlength="400"></textarea>
+      </label>
+      <fieldset>
+        <legend>Build types it fits (used for suggestions)</legend>
+        <div class="chips" id="addTags"></div>
+      </fieldset>
+      <p class="form-error" id="addError" role="alert"></p>
+      <p class="hint">Saved in this browser. To make a perk permanent, add it to the files in the <code>data</code> folder.</p>
+      <div class="sheet-actions">
+        <button type="button" class="btn" data-close>Cancel</button>
+        <button type="submit" class="btn primary">Save perk</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Check for new perks -->
+  <dialog id="updateDialog" class="sheet small" aria-labelledby="updateTitle">
+    <h3 id="updateTitle">Check for new perks</h3>
+    <p class="update-status" id="updateStatus" role="status"></p>
+    <ul class="update-list" id="updateList"></ul>
+    <div class="sheet-actions">
+      <button type="button" class="btn" id="updateClose">Close</button>
+      <button type="button" class="btn primary" id="updateAdd" hidden>Add them</button>
+    </div>
+  </dialog>
+
+  <script src="data/survivor-perks.js"></script>
+  <script src="data/killer-perks.js"></script>
+  <script src="data/descriptions.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

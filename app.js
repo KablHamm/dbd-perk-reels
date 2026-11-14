@@ -2,7 +2,6 @@
   "use strict";
 
   const DATA = Object.assign({ survivor: [], killer: [] }, window.DBD_PERKS);
-  const CUSTOM_KEY = "dbd-perk-randomiser.custom";
   const SIDE_KEY = "dbd-perk-randomiser.side";
   const $ = (sel, root = document) => root.querySelector(sel);
   const other = (side) => (side === "survivor" ? "killer" : "survivor");
@@ -97,7 +96,6 @@
     build: { survivor: [], killer: [] },
     note: { survivor: "", killer: "" },
     spinning: false,
-    custom: loadCustom(),
     filterTag: "",
     shownPerk: null,
   };
@@ -108,21 +106,9 @@
   const askInput = $("#askInput");
   const perkDialog = $("#perkDialog");
   const browseDialog = $("#browseDialog");
-  const addDialog = $("#addDialog");
 
-  function loadCustom() {
-    try {
-      const saved = JSON.parse(localStorage.getItem(CUSTOM_KEY));
-      return Array.isArray(saved) ? saved.filter((p) => p && p.name && DATA[p.side]) : [];
-    } catch {
-      return [];
-    }
-  }
-  function saveCustom() {
-    try { localStorage.setItem(CUSTOM_KEY, JSON.stringify(state.custom)); } catch { /* storage unavailable */ }
-  }
   function perksFor(side) {
-    return DATA[side].concat(state.custom.filter((p) => p.side === side));
+    return DATA[side];
   }
 
   /* ------------------------------------------------------------------
@@ -151,18 +137,16 @@
   }
   function iconPath(perk) {
     if (perk.icon) return perk.icon;
-    if (perk.custom) return "";
     return `icons/${DATA.killer.includes(perk) ? "killer" : "survivor"}/${slug(perk.name)}.png`;
   }
   // Full description from data/descriptions.js (generated from the wiki), falling back to the
   // short summary written in the perk files.
   const FULL = Object.assign({ survivor: {}, killer: {} }, window.DBD_DESCRIPTIONS);
   function describe(perk) {
-    if (perk.custom) return perk.desc;
     return FULL[DATA.killer.includes(perk) ? "killer" : "survivor"][slug(perk.name)] || perk.desc;
   }
   function fillGem(gem, perk) {
-    gem.className = "gem " + perkKind(perk) + (perk.custom ? " custom" : "");
+    gem.className = "gem " + perkKind(perk);
     gem.replaceChildren();
     const src = iconPath(perk);
     if (src) {
@@ -375,10 +359,9 @@
     state.shownPerk = perk;
     fillGem($("#perkGem"), perk);
     $("#perkName").textContent = perk.name;
-    $("#perkOwner").textContent = perk.owner + (perk.custom ? " · added by you" : "");
+    $("#perkOwner").textContent = perk.owner;
     $("#perkDesc").textContent = describe(perk);
     $("#perkTags").replaceChildren(...perk.tags.filter((t) => TAGS[side][t]).map((t) => el("span", "chip", TAGS[side][t])));
-    $("#perkDelete").hidden = !perk.custom;
     perkDialog.showModal();
   }
 
@@ -421,66 +404,6 @@
       return card;
     });
     $("#perkList").replaceChildren(...(cards.length ? cards : [el("p", "empty-list", "No perks match that search.")]));
-  }
-
-  /* ------------------------------------------------------------------
-     Add a perk
-     ------------------------------------------------------------------ */
-  function renderAddTags() {
-    const side = $("#addSide").value;
-    const boxes = Object.entries(TAGS[side]).map(([tag, label]) => {
-      const wrap = el("label", "chip");
-      const box = el("input");
-      box.type = "checkbox";
-      box.value = tag;
-      wrap.append(box, label);
-      return wrap;
-    });
-    $("#addTags").replaceChildren(...boxes);
-  }
-  function openAdd() {
-    $("#addForm").reset();
-    $("#addSide").value = state.side;
-    $("#addError").textContent = "";
-    renderAddTags();
-    addDialog.showModal();
-  }
-  function submitAdd(event) {
-    event.preventDefault();
-    const side = $("#addSide").value;
-    const name = $("#addName").value.trim();
-    const desc = $("#addDesc").value.trim();
-    if (!name || !desc) return;
-    if (perksFor(side).some((p) => p.name.toLowerCase() === name.toLowerCase())) {
-      $("#addError").textContent = `There is already a ${side} perk called "${name}".`;
-      return;
-    }
-    state.custom.push({
-      side,
-      name,
-      owner: $("#addOwner").value.trim() || "Custom",
-      desc,
-      tags: [...document.querySelectorAll("#addTags input:checked")].map((box) => box.value),
-      icon: "",
-      custom: true,
-    });
-    saveCustom();
-    addDialog.close();
-    if (side !== state.side) setSide(side);
-    renderBrowse();
-  }
-  function deleteShownPerk() {
-    const perk = state.shownPerk;
-    if (!perk || !perk.custom) return;
-    state.custom = state.custom.filter((p) => p !== perk);
-    saveCustom();
-    // Clear it out of any build it was sitting in.
-    for (const side of ["survivor", "killer"]) {
-      state.build[side] = state.build[side].map((p) => (p === perk ? null : p));
-    }
-    perkDialog.close();
-    renderReels();
-    if (browseDialog.open) renderBrowse();
   }
 
   /* ------------------------------------------------------------------
@@ -772,10 +695,6 @@
     browseDialog.showModal();
   });
   $("#browseSearch").addEventListener("input", renderBrowse);
-  $("#addBtn").addEventListener("click", openAdd);
-  $("#addSide").addEventListener("change", renderAddTags);
-  $("#addForm").addEventListener("submit", submitAdd);
-  $("#perkDelete").addEventListener("click", deleteShownPerk);
 
   document.querySelectorAll("dialog").forEach((dialog) => {
     dialog.addEventListener("click", (event) => {

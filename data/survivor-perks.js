@@ -13,8 +13,6 @@
     spaces and punctuation, e.g. "We'll Make It" -> icons/survivor/we-ll-make-it.png.
     It is picked up automatically. (Or pass a different path as an optional 5th value.)
     With no image, the perk shows its initials instead.
-  - You can also add perks from inside the app (All perks -> Add a perk). Those are
-    saved in your browser only; perks in this file are there for everyone.
 */
 (function () {
   const list = [];

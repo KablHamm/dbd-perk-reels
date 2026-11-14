@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Perk Randomiser</title>
-  <link rel="stylesheet" href="styles.css?v=6">
+  <link rel="stylesheet" href="styles.css?v=7">
 </head>
 <body>
   <header class="top">
@@ -59,7 +59,6 @@
     <p class="desc" id="perkDesc"></p>
     <div class="tags" id="perkTags"></div>
     <div class="sheet-actions">
-      <button type="button" class="btn danger" id="perkDelete" hidden>Delete perk</button>
       <button type="button" class="btn" data-close>Close</button>
     </div>
   </dialog>
@@ -70,44 +69,11 @@
       <h3 id="browseTitle">Survivor perks</h3>
       <span class="count" id="browseCount"></span>
       <button type="button" class="btn" id="checkBtn">Check for new perks</button>
-      <button type="button" class="btn" id="addBtn">Add a perk</button>
       <button type="button" class="btn icon" data-close aria-label="Close">✕</button>
     </div>
     <input type="search" id="browseSearch" aria-label="Search perks" placeholder="Search by name, character or effect">
     <div class="chips" id="browseTags"></div>
     <div class="perk-list" id="perkList"></div>
-  </dialog>
-
-  <!-- Add a perk -->
-  <dialog id="addDialog" class="sheet small" aria-labelledby="addTitle">
-    <h3 id="addTitle">Add a perk</h3>
-    <form id="addForm" autocomplete="off">
-      <label>Side
-        <select id="addSide">
-          <option value="survivor">Survivor</option>
-          <option value="killer">Killer</option>
-        </select>
-      </label>
-      <label>Perk name
-        <input type="text" id="addName" required maxlength="60">
-      </label>
-      <label>Character
-        <input type="text" id="addOwner" maxlength="60" placeholder="Optional">
-      </label>
-      <label>What it does
-        <textarea id="addDesc" rows="3" required maxlength="400"></textarea>
-      </label>
-      <fieldset>
-        <legend>Build types it fits (used for suggestions)</legend>
-        <div class="chips" id="addTags"></div>
-      </fieldset>
-      <p class="form-error" id="addError" role="alert"></p>
-      <p class="hint">Saved in this browser. To make a perk permanent, add it to the files in the <code>data</code> folder.</p>
-      <div class="sheet-actions">
-        <button type="button" class="btn" data-close>Cancel</button>
-        <button type="submit" class="btn primary">Save perk</button>
-      </div>
-    </form>
   </dialog>
 
   <!-- Check for new perks -->
@@ -125,6 +91,6 @@
   <script src="data/survivor-perks.js"></script>
   <script src="data/killer-perks.js"></script>
   <script src="data/descriptions.js"></script>
-  <script src="app.js?v=6"></script>
+  <script src="app.js?v=7"></script>
 </body>
 </html>

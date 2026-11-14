@@ -491,7 +491,9 @@
   const updateDialog = $("#updateDialog");
   let reloadOnClose = false;
 
-  async function checkForPerks(add) {
+  // dates: release dates typed into the window, as { "<side>|<character>": "YYYY-MM-DD" }.
+  async function checkForPerks(dates) {
+    const add = Boolean(dates);
     const status = $("#updateStatus");
     const list = $("#updateList");
     const addButton = $("#updateAdd");
@@ -506,16 +508,16 @@
     }
     if (!["localhost", "127.0.0.1"].includes(location.hostname)) {
       // The online copy has no server to ask: a daily job on GitHub does the check instead.
-      status.textContent = "This online copy checks the wiki by itself once a day and adds new perks automatically. If a perk is missing, try again tomorrow.";
+      status.textContent = "This online copy checks the wiki by itself once a day. When it finds new perks it opens an issue on the GitHub repository asking for their release date, and adds them to the app on that day.";
       return;
     }
-    status.textContent = add ? "Adding perks…" : "Checking the wiki… this can take a few seconds.";
+    status.textContent = add ? "Saving…" : "Checking the wiki… this can take a few seconds.";
     $("#updateClose").disabled = true;
     try {
       const response = await fetch("api/check", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ add }),
+        body: JSON.stringify({ dates: dates || null }),
       });
       const isJson = (response.headers.get("Content-Type") || "").includes("json");
       if (!isJson) {
@@ -529,24 +531,34 @@
       }
 
       reloadOnClose = true; // descriptions and icons were refreshed on disk
-      const found = result.newPerks.length;
-      const many = found === 1 ? "perk" : "perks";
-      if (add) {
-        list.replaceChildren();
-        status.textContent = `Added ${result.added} ${result.added === 1 ? "perk" : "perks"}. Reloading…`;
-        setTimeout(() => location.reload(), 1200);
-      } else if (!found) {
-        status.textContent = `You're up to date. The wiki lists ${result.survivor} survivor and ${result.killer} killer perks, and the app has them all.`;
+      const names = (group) => group.perks.map((p) => p.name).join(", ");
+      const addedNow = result.released.reduce((sum, group) => sum + group.perks.length, 0);
+      const lines = [];
+      if (addedNow) lines.push(`Added ${addedNow} ${addedNow === 1 ? "perk" : "perks"} to the app: ${result.released.map(names).join(", ")}.`);
+      if (!result.pending.length) {
+        lines.push(`You're up to date. The wiki lists ${result.survivor} survivor and ${result.killer} killer perks, and the app has them all.`);
       } else {
-        status.textContent = `Found ${found} new ${many} on the wiki:`;
-        list.replaceChildren(...result.newPerks.map((perk) => {
-          const item = el("li", "", perk.name);
-          item.append(el("small", "", `${perk.owner} · ${perk.side}`));
-          return item;
-        }));
-        addButton.textContent = found === 1 ? "Add it" : "Add them";
-        addButton.hidden = false;
+        lines.push("These perks are on the wiki but not in the app yet. Perks often show up before their chapter is out, so give each a release date and it will be added on that day. Pick today to add it now.");
       }
+      status.textContent = lines.join(" ");
+
+      // One row per character waiting for release, each with its own date box.
+      const today = new Date().toISOString().slice(0, 10);
+      list.replaceChildren(...result.pending.map((group) => {
+        const item = el("li", "", group.owner);
+        item.append(el("small", "", `${group.side} · ${names(group)}`));
+        const label = el("label", "", group.release ? "Scheduled for" : "Release date");
+        const input = el("input");
+        input.type = "date";
+        input.min = today;
+        input.value = group.release || "";
+        input.dataset.key = `${group.side}|${group.owner}`;
+        input.dataset.saved = group.release || "";
+        label.append(input);
+        item.append(label);
+        return item;
+      }));
+      addButton.hidden = !result.pending.length;
     } catch {
       status.textContent = needsServer;
     } finally {
@@ -554,7 +566,13 @@
     }
   }
   $("#checkBtn").addEventListener("click", () => checkForPerks(false));
-  $("#updateAdd").addEventListener("click", () => checkForPerks(true));
+  $("#updateAdd").addEventListener("click", () => {
+    const dates = {};
+    document.querySelectorAll("#updateList input[type=date]").forEach((input) => {
+      if (input.value && input.value !== input.dataset.saved) dates[input.dataset.key] = input.value;
+    });
+    if (Object.keys(dates).length) checkForPerks(dates);
+  });
   $("#updateClose").addEventListener("click", () => updateDialog.close());
   updateDialog.addEventListener("close", () => { if (reloadOnClose) location.reload(); });
 

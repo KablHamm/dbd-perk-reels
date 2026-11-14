@@ -46,13 +46,15 @@ class Handler(SimpleHTTPRequestHandler):
         try:
             length = int(self.headers.get("Content-Length") or 0)
             wants = json.loads(self.rfile.read(length) or b"{}")
-            add = bool(wants.get("add")) if isinstance(wants, dict) else False
+            dates = wants.get("dates") if isinstance(wants, dict) else None
+            if not isinstance(dates, dict):
+                dates = None
         except ValueError:
             return self.send_error(400)
         if not busy.acquire(blocking=False):
             return self.reply(409, {"error": "A check is already running."})
         try:
-            self.reply(200, wiki.run(add=add))
+            self.reply(200, wiki.run(dates=dates))
         except Exception as e:
             self.reply(502, {"error": str(e)})
         finally:

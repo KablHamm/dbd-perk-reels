@@ -205,9 +205,6 @@
   p("Boon: Steadfast", "Aurora Stardotter", "boon gens aura", "Bless a totem. Generators inside its range regress more slowly and are repaired faster, and survivors in range can see them.");
   p("Fruits of Your Labor", "Aurora Stardotter", "gens selfheal haste", "Each completed generator earns a token. When you finish repairing one yourself, every token gives you a moment of speed and a chunk of healing progress.");
   p("Salvation's Cry", "Aurora Stardotter", "aura team chase", "When the killer starts chasing you, you briefly see your teammates, and teammates who aren't being chased see you and the killer for a few seconds.");
-  p("Best Gift Ever", "Sienna Shaw", "items blind", "Spend a token the first time you drop each type of item to sacrifice it for a bonus that depends on the item, such as blinding the killer when you stun them.");
-  p("Shared Trauma", "Sienna Shaw", "altruism exhaustion team", "Taking a protection hit lets you and nearby survivors recover from Exhausted even while running for a while. You also see the auras of Exhausted survivors.");
-  p("Valkyrie's Rage", "Sienna Shaw", "stun chase", "After you have been chased for long enough, your next pallet stun lasts much longer.");
 
   window.DBD_PERKS = Object.assign(window.DBD_PERKS || {}, { survivor: list });
 })();

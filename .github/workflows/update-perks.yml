@@ -1,25 +1,38 @@
-# Checks the wiki once a day, refreshes descriptions and icons, and adds any new perks.
-# You can also run it by hand from the repository's Actions tab ("Run workflow").
+# Checks the wiki once a day and refreshes descriptions and icons.
+# New perks are held back: the job opens an issue asking for their release date, and adds
+# them to the app on that date. It also runs when the repository owner replies to an issue,
+# so a date is picked up straight away.
+# You can run it by hand from the repository's Actions tab ("Run workflow").
 name: Update perks from the wiki
 
 on:
   schedule:
     - cron: "17 5 * * *"
   workflow_dispatch:
+  issue_comment:
+    types: [created]
 
 permissions:
   contents: write
+  issues: write
+
+concurrency:
+  group: update-perks
+  cancel-in-progress: false
 
 jobs:
   update:
+    if: github.event_name != 'issue_comment' || github.event.comment.user.login == github.repository_owner
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Read the wiki
-        run: python tools/update_from_wiki.py --add
+      - name: Read the wiki and the release dates
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python tools/update_from_wiki.py --github
       - name: Save any changes
         run: |
           git config user.name "github-actions[bot]"

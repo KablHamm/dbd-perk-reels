@@ -176,11 +176,8 @@
   p("Celestial Witness", "The Judgment", "obsession aura tracking", "Every half minute, if your obsession is far away you see their aura briefly. If not, the survivor furthest from you becomes the obsession.");
   p("Hex: Under Your Thumb", "The Judgment", "hex chase tracking", "Lights a totem when a survivor gains a hook state. It caps how much speed boost running survivors can have, and reveals nearby survivors whenever they gain one.");
   p("Lay Waste", "The Judgment", "regression", "A generator you damage regresses faster the more progress it has. Has a cooldown.");
-  p("Funny Business", "The Terrifier", "regression haste genblock", "Damaging a generator gives you a short speed boost and one random outcome: a longer boost, a brief stun, the generator being blocked, or just confetti. Has a cooldown.");
-  p("Kill Spree", "The Terrifier", "endgame", "Once every survivor has reached their second hook stage and all generators are done, you can kill survivors by hand. Exit switches are blocked while you do, and briefly after.");
 
   // ---- Newer chapters: add them here as they come out ----
 
-  p("Laughingstock", "The Terrifier", "status aura", "Survivors close to a completed generator are Exhausted and Oblivious, lingering briefly after they leave. You also see the auras of completed generators.");
   window.DBD_PERKS = Object.assign(window.DBD_PERKS || {}, { killer: list });
 })();

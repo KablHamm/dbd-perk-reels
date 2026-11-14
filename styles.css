@@ -297,6 +297,13 @@ main { max-width: 760px; margin: 0 auto; padding: 16px; display: grid; gap: 28px
 .challenge-reel.landed .ctile { animation: land 0.35s ease-out; color: var(--accent); }
 .challenge-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
 #challengeCount { min-height: 1.3em; margin-top: -4px; }
+/* the two challenge buttons stay side by side; only on a very narrow screen do they stack, centred */
+.challenge .challenge-foot { flex-wrap: nowrap; }
+.challenge .challenge-foot .btn { white-space: nowrap; padding-inline: clamp(8px, 3.4vw, 18px); }
+@media (max-width: 330px) {
+  .challenge .challenge-foot { flex-direction: column; justify-content: center; }
+  .ctile:has(.cgem-wrap) { font-size: 0.9rem; gap: 10px; padding-inline: 10px; }
+}
 
 /* completed challenges: green, with a tick */
 .challenge-reel { --done: #7cc68a; }

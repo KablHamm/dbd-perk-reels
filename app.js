@@ -890,8 +890,9 @@
       : challengeTile(list[pick]));
     if (pick >= 0) challengeReel.classList.add("landed");
     const tally = `${doneCount(side)} of ${list.length} completed.`;
-    $("#challengeCount").textContent = pick < 0 ? tally
-      : finished ? `Completed. Click it again to undo. ${tally}`
+    // always shown, also before the first spin and while the reel is rolling
+    $("#challengeCount").textContent = finished
+      ? `Completed. Click it again to undo. ${tally}`
       : `Click the challenge when you've completed it. ${tally}`;
   }
 
@@ -973,7 +974,7 @@
     challengeReel.classList.remove("landed", "done", "pickable");
     challengeReel.classList.add("spinning");
     challengeBtn.disabled = true;
-    $("#challengeCount").textContent = "";
+    $("#challengeCount").textContent = `Click the challenge when you've completed it. ${doneCount(side)} of ${list.length} completed.`;
     const start = -((tiles.length - 1) / tiles.length) * 100;
     challengeRoll = challengeStrip.animate(
       [

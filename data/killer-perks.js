@@ -177,5 +177,8 @@
 
   // ---- Newer chapters: add them here as they come out ----
 
+  p("Funny Business", "The Terrifier", "regression haste genblock", "");
+  p("Kill Spree", "The Terrifier", "endgame", "");
+  p("Laughingstock", "The Terrifier", "status aura", "");
   window.DBD_PERKS = Object.assign(window.DBD_PERKS || {}, { killer: list });
 })();

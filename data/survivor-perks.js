@@ -204,5 +204,8 @@
   p("Fruits of Your Labor", "Aurora Stardotter", "gens selfheal haste", "Each completed generator earns a token. When you finish repairing one yourself, every token gives you a moment of speed and a chunk of healing progress.");
   p("Salvation's Cry", "Aurora Stardotter", "aura team chase", "When the killer starts chasing you, you briefly see your teammates, and teammates who aren't being chased see you and the killer for a few seconds.");
 
+  p("Best Gift Ever", "Sienna Shaw", "items blind", "");
+  p("Shared Trauma", "Sienna Shaw", "altruism exhaustion team", "");
+  p("Valkyrie's Rage", "Sienna Shaw", "stun chase", "");
   window.DBD_PERKS = Object.assign(window.DBD_PERKS || {}, { survivor: list });
 })();
